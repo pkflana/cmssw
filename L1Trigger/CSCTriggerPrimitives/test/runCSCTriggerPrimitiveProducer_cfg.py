@@ -84,9 +84,12 @@ process.maxEvents = cms.untracked.PSet(
       input = cms.untracked.int32(options.maxEvents)
 )
 
-#process.options = cms.untracked.PSet(
-#      SkipEvent = cms.untracked.vstring('ProductNotFound')
-#)
+# process.options = cms.untracked.PSet(
+# #       SkipEvent = cms.untracked.vstring('ProductNotFound')
+# # )
+#       TryToContinue = cms.untracked.vstring('ProductNotFound')
+# )
+
 
 process.source = cms.Source(
       "PoolSource",
@@ -104,13 +107,14 @@ if options.unpackGEM:
 ## global tag (data or MC, Run-2 or Run-3)
 from Configuration.AlCa.GlobalTag import GlobalTag
 if options.mc:
-      process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
+      # process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
       if options.run3:
-            process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2022_realistic', '')
+            print("CORRECT GLOBAL TAG")
+            process.GlobalTag = GlobalTag(process.GlobalTag, '140X_dataRun3_HLT_v3', '')#'auto:phase1_2022_realistic', '')#
 else:
       process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
       if options.run3:
-            process.GlobalTag = GlobalTag(process.GlobalTag, '140X_dataRun3_v3', '')
+            process.GlobalTag = GlobalTag(process.GlobalTag, '124X_dataRun3_v10', '')
 
 ## running on unpacked data, or after running the unpacker
 if not options.mc or options.unpack:
@@ -318,3 +322,12 @@ if options.saveEdmOutput:
       process.schedule.extend([process.p5])
 
 process.schedule.extend([process.p6])
+
+process.GEMCSCTriggerPrimitivesReader = cms.EDAnalyzer('GEMCSCTriggerPrimitivesReader', 
+      CSCLCTProducerData = cms.untracked.string("muonCSCDigis"),
+      CSCLCTProducerEmul = cms.untracked.string("cscTriggerPrimitiveDigis"),#simCscTriggerPrimitiveDigis for simulation
+      debug = cms.bool(False),
+      )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("out_2.root"))
+process.p7 = cms.EndPath(process.GEMCSCTriggerPrimitivesReader)
+process.schedule.extend([process.p7])
