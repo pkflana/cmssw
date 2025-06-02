@@ -31,16 +31,20 @@ void LCTDebugobject::SetGEMClusterKeyStrip(int cl_es_){
     cl_es = cl_es_;
 }
 
-void LCTDebugobject::SetCLCTKeyStrip(int clctkeystrip_){
-    clctkeystrip = clctkeystrip_;
-}
-
 void LCTDebugobject::Setresidual(int residualwithalignment_){
     residualwithalignment = residualwithalignment_;
 }
 
 void LCTDebugobject::Setresidualnoalignmentcorrection(int residualwithoutalignment_){
     residualwithoutalignment = residualwithoutalignment_;
+}
+
+void LCTDebugobject::SetClusterRoll(int roll_){
+    cluster_roll = roll_;
+}
+
+void LCTDebugobject::SetClusterBx(int bx_){
+    cluster_bx = bx_;
 }
 
 int LCTDebugobject::Getbendingangle(){
@@ -69,10 +73,6 @@ bool LCTDebugobject::Getlayer2bool(){
     return layer2bool;
 }
 
-int LCTDebugobject::GetCLCTKeyStrip(){
-    return clctkeystrip;
-}
-
 int LCTDebugobject::GetGEMClusterKeyStrip(){
     return cl_es;
 }
@@ -85,3 +85,10 @@ int LCTDebugobject::Getresidualnoalignmentcorrection(){
     return residualwithoutalignment;
 }
 
+int LCTDebugobject::GetClusterRoll(){
+    return cluster_roll;
+}
+
+int LCTDebugobject::GetClusterBx(){
+    return cluster_bx;
+}

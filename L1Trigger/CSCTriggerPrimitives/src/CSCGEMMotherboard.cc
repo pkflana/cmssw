@@ -586,19 +586,24 @@ void CSCGEMMotherboard::constructLCTsGEM(const CSCALCTDigi& alct,
       int bendingangle = slopeandbendingangles[1];
       int bendinganglenoalignmentcorrection = slopeandbendingangles[2];
       int cl_es = slopeandbendingangles[3];
-      int clctkeystrip = slopeandbendingangles[4];
-      int residualwithalignment = slopeandbendingangles[5];
-      int residualwithoutalignment = slopeandbendingangles[6];
+      int residualwithalignment = slopeandbendingangles[4];
+      int residualwithoutalignment = slopeandbendingangles[5];
+      int cluster_bx = gem.bx();
       thisLCTdebug.Setbendingangle(bendingangle);
       thisLCTdebug.Setbendinganglenoalignmentcorrection(bendinganglenoalignmentcorrection);
       thisLCTdebug.SetGEMClusterKeyStrip(cl_es);
-      thisLCTdebug.SetCLCTKeyStrip(clctkeystrip);
       thisLCTdebug.Setresidual(residualwithalignment);
       thisLCTdebug.Setresidualnoalignmentcorrection(residualwithoutalignment);
+      thisLCTdebug.SetClusterBx(cluster_bx);
       bool isLayer2 = false;
       if (!gem.isMatchingLayer1() and gem.isMatchingLayer2())
         isLayer2 = true;
       thisLCTdebug.Setlayer2bool(isLayer2);
+      if (isLayer2){
+        thisLCTdebug.SetClusterRoll(gem.roll2());
+      } else {
+        thisLCTdebug.SetClusterRoll(gem.roll1());
+      }
       // thisLCTdebug.Setidentifiers(alct.getKeyWG(),alct.getBX(),clct.getBend(),clct.getEighthStripBit(),abs(slope));
       
       thisLCT.setSlope(abs(slope));
@@ -680,12 +685,25 @@ void CSCGEMMotherboard::constructLCTsGEM(const CSCCLCTDigi& clct,
       int slope = slopeandbendingangles[0];
       int bendingangle = slopeandbendingangles[1];
       int bendinganglenoalignmentcorrection = slopeandbendingangles[2];
+      int cl_es = slopeandbendingangles[3];
+      int residualwithalignment = slopeandbendingangles[4];
+      int residualwithoutalignment = slopeandbendingangles[5];
+      int cluster_bx = gem.bx();
       thisLCTdebug.Setbendingangle(bendingangle);
       thisLCTdebug.Setbendinganglenoalignmentcorrection(bendinganglenoalignmentcorrection);
+      thisLCTdebug.SetGEMClusterKeyStrip(cl_es);
+      thisLCTdebug.Setresidual(residualwithalignment);
+      thisLCTdebug.Setresidualnoalignmentcorrection(residualwithoutalignment);
+      thisLCTdebug.SetClusterBx(cluster_bx);
       bool isLayer2 = false;
       if (!gem.isMatchingLayer1() and gem.isMatchingLayer2())
         isLayer2 = true;
       thisLCTdebug.Setlayer2bool(isLayer2);
+      if (isLayer2){
+        thisLCTdebug.SetClusterRoll(gem.roll2());
+      } else {
+        thisLCTdebug.SetClusterRoll(gem.roll1());
+      }
 
       thisLCT.setSlope(abs(slope));
       thisLCT.setBend(pow(-1, std::signbit(slope)));

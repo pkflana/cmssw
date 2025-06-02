@@ -149,6 +149,8 @@ void CSCGEMMatcher::matchingClustersLoc(const CSCCLCTDigi& clct,
     return;
 
   const bool isME1a(station_ == 1 and clct.getKeyStrip() > CSCConstants::MAX_HALF_STRIP_ME1B);
+  std::cout<<"MAX_HALF_STRIP_ME1B: "<<CSCConstants::MAX_HALF_STRIP_ME1B<<std::endl;
+  std::cout<<"station_: "<<station_<<" clct.getKeyStrip(): "<<clct.getKeyStrip()<<" isME1a: "<<isME1a<<std::endl;
 
   //determine window size
   unsigned eighthStripCut = isEven_ ? 4 * maxDeltaHsEven_ : 4 * maxDeltaHsOdd_;  // Cut in 1/8 = 4 * cut in 1/2
@@ -308,7 +310,6 @@ std::vector<int> CSCGEMMatcher::matchedClusterDistES(const CSCCLCTDigi& clct,
   output.push_back(eighthStripDiff);
   output.push_back(bendinganglenocorrection);
   output.push_back(cl_es);
-  output.push_back(clct.getKeyStrip(8));
   return output;
 }
 
@@ -556,7 +557,6 @@ std::vector<int> CSCGEMMatcher::calculateGEMCSCBending(const CSCCLCTDigi& clct,
   output.push_back(SignedEighthStripDiff[0]);
   output.push_back(SignedEighthStripDiff[1]);
   output.push_back(SignedEighthStripDiff[2]);
-  output.push_back(SignedEighthStripDiff[3]);
   output.push_back(residualwithalignment);
   output.push_back(residualwithoutalignment);
   // return slopeShift;
