@@ -8,11 +8,12 @@ class LCTDebugobject{
         LCTDebugobject();
         void Setbendingangle(int eighthStripDiff_);
         void SetGEMClusterKeyStrip(int cl_es_);
-        void SetCLCTKeyStrip(int clctkeystrip_);
         void Setresidual(int residualwithalignment);
         void Setresidualnoalignmentcorrection(int residualwithoutalignment_);
         void Setbendinganglenoalignmentcorrection(int bendinganglenoalignmentcorrection_);
         void Setidentifiers(int KeyWG_, int bx_, int Bend_,int KeyStrip_, int slope_);
+        void SetClusterRoll(int roll_);
+        void SetClusterBx(int bx_);
         int Getbendingangle();
         int Getbendinganglenoalignmentcorrection();
         void Setlayer2bool(bool isLayer2);
@@ -22,6 +23,8 @@ class LCTDebugobject{
         int GetCLCTKeyStrip();
         int Getresidual();
         int Getresidualnoalignmentcorrection();
+        int GetClusterRoll();
+        int GetClusterBx();
     private:    
         int bendingangle;
         int bendinganglenoalignmentcorrection;
@@ -32,9 +35,10 @@ class LCTDebugobject{
         int slope;
         bool layer2bool;
         int cl_es;
-        int clctkeystrip;
         int residualwithalignment;
         int residualwithoutalignment;
+        int cluster_roll;
+        int cluster_bx;
 };
 
 

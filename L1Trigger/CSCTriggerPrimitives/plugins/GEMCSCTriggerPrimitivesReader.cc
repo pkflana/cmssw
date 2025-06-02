@@ -131,9 +131,11 @@ private:
   std::vector<int> bendinganglenoalignmentcorrectionvector;
   std::vector<bool> layer2boolvector;
   std::vector<int> cluster_keystripvector;
-  std::vector<int> clctkeystripvector;
   std::vector<int> residualvector;
   std::vector<int> residualnoalignmentcorrectionvector;
+  std::vector<int> clusterrollvector;
+  std::vector<int> clusterbxvector;
+  std::vector<bool> isme1avector;
 
   // Run number, Event number
   int RUN_;
@@ -441,6 +443,11 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
               KeyStrip = (*digiIt).getStrip();
               slope = (*digiIt).getSlope();
               // std::cout<<"lct identifiers: "<<KeyWG<<" "<<bx<<" "<<Bend<<" "<<KeyStrip<<" "<<slope<<std::endl;
+              bool isme1a = false;
+              if ((stat==1) && ((*digiIt).getStrip() > 127)){
+                isme1a = true;
+              }
+              isme1avector.push_back(isme1a);
               bool debugfound = false;
               for (unsigned debugnum=0; debugnum<lctdebugvector_->size(); debugnum++){
                 
@@ -452,13 +459,15 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
                   bendinganglenoalignmentcorrectionvector.push_back(debug.Getbendinganglenoalignmentcorrection());
                   layer2boolvector.push_back(debug.Getlayer2bool());
                   int cluster_keystrip = debug.GetGEMClusterKeyStrip();
-                  int clctkeystrip = debug.GetCLCTKeyStrip();
                   cluster_keystripvector.push_back(cluster_keystrip);
-                  clctkeystripvector.push_back(clctkeystrip);
                   int residualwithalignment = debug.Getresidual();
                   int residualwithoutalignment = debug.Getresidualnoalignmentcorrection();
                   residualvector.push_back(residualwithalignment);
                   residualnoalignmentcorrectionvector.push_back(residualwithoutalignment);
+                  int clusterroll = debug.GetClusterRoll();
+                  clusterrollvector.push_back(clusterroll);
+                  int clusterbx = debug.GetClusterBx();
+                  clusterbxvector.push_back(clusterbx);
                   debugfound = true;
                 }
                   
@@ -468,9 +477,10 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
                 bendinganglenoalignmentcorrectionvector.push_back(-999);
                 layer2boolvector.push_back(false);
                 cluster_keystripvector.push_back(-999);
-                clctkeystripvector.push_back(-999);
                 residualvector.push_back(-999);
                 residualnoalignmentcorrectionvector.push_back(-999);
+                clusterrollvector.push_back(-999);
+                clusterbxvector.push_back(-999);
               }
             }
           }
@@ -502,9 +512,11 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
   bendinganglevector.clear();
   layer2boolvector.clear();
   cluster_keystripvector.clear();
-  clctkeystripvector.clear();
   residualvector.clear();
   residualnoalignmentcorrectionvector.clear();
+  clusterrollvector.clear();
+  isme1avector.clear();
+  clusterbxvector.clear();
 }
 
 TTree* GEMCSCTriggerPrimitivesReader::bookTTree_ALCT() {
@@ -590,9 +602,11 @@ TTree* GEMCSCTriggerPrimitivesReader::bookTTree_LCT(){
   t->Branch("bendinganglenoalignmentcorrection", "std::vector<int>", &bendinganglenoalignmentcorrectionvector);
   t->Branch("layer2bool", "std::vector<bool>", &layer2boolvector);
   t->Branch("cluster_keystrip","std::vector<int>", &cluster_keystripvector);
-  t->Branch("clctkeystrip","std::vector<int>",&clctkeystripvector);
   t->Branch("residual","std::vector<int>",&residualvector);
   t->Branch("residualnoalignmentcorrection","std::vector<int>",&residualnoalignmentcorrectionvector);
+  t->Branch("clusterroll","std::vector<int>",&clusterrollvector);
+  t->Branch("isme1a","std::vector<bool>",&isme1avector);
+  t->Branch("clusterbx","std::vector<int>",&clusterbxvector);
   return t;
 }
 
