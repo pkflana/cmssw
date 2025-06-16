@@ -96,6 +96,7 @@ private:
   int t_RUN;
   long unsigned int t_Event;
   int t_eventsAnalyzed;
+  int t_luminosityblock;
 
   std::vector<bool> t_is_data;
   std::vector<bool> t_is_emul;
@@ -127,19 +128,31 @@ private:
   std::vector<int> t_collisionB;
   std::vector<int> t_accel;
 
-  std::vector<int> bendinganglevector;
-  std::vector<int> bendinganglenoalignmentcorrectionvector;
+  std::vector<int> bendinganglevectorlayer1;
+  std::vector<int> bendinganglenoalignmentcorrectionvectorlayer1;
   std::vector<bool> layer2boolvector;
-  std::vector<int> cluster_keystripvector;
-  std::vector<int> residualvector;
-  std::vector<int> residualnoalignmentcorrectionvector;
-  std::vector<int> clusterrollvector;
-  std::vector<int> clusterbxvector;
+  std::vector<int> cluster_keystripvectorlayer1;
+  std::vector<int> residualvectorlayer1;
+  std::vector<int> residualnoalignmentcorrectionvectorlayer1;
+  std::vector<int> clusterrollvectorlayer1;
+  std::vector<int> clusterbxvectorlayer1;
   std::vector<bool> isme1avector;
+  std::vector<bool> layer1matchvector;
+
+  std::vector<int> bendinganglevectorlayer2;
+  std::vector<int> bendinganglenoalignmentcorrectionvectorlayer2;
+  std::vector<int> cluster_keystripvectorlayer2;
+  std::vector<int> residualvectorlayer2;
+  std::vector<int> residualnoalignmentcorrectionvectorlayer2;
+  std::vector<int> clusterrollvectorlayer2;
+  std::vector<int> clusterbxvectorlayer2;
+  std::vector<bool> layer2matchvector;
 
   // Run number, Event number
   int RUN_;
   long unsigned int Event_;
+  int luminosityblock;
+
 
 
   edm::EDGetTokenT<CSCALCTDigiCollection> alcts_d_token_;
@@ -193,6 +206,7 @@ GEMCSCTriggerPrimitivesReader::analyze(const edm::Event& iEvent, const edm::Even
 
     RUN_ = iEvent.id().run();
     Event_ = iEvent.id().event();
+    luminosityblock = iEvent.id().luminosityBlock();
     if(debug)std::cout<<"RUN: "<<RUN_<<" Event: "<<Event_<<std::endl;
 
     //get Data
@@ -270,6 +284,7 @@ void GEMCSCTriggerPrimitivesReader::SaveALCTs(const CSCALCTDigiCollection* alcts
   t_RUN = RUN_;
   t_Event = Event_;
   t_eventsAnalyzed = eventsAnalyzed;
+  t_luminosityblock = luminosityblock;
   for (int endc = 1; endc <= 2; endc++) {
     for (int stat = 1; stat <= 4; stat++) {
       for (int ring = 1; ring <= 4; ring++) {
@@ -325,6 +340,7 @@ void GEMCSCTriggerPrimitivesReader::SaveCLCTs(const CSCCLCTDigiCollection* clcts
   t_RUN = RUN_;
   t_Event = Event_;
   t_eventsAnalyzed = eventsAnalyzed;
+  t_luminosityblock = luminosityblock;
   for (int endc = 1; endc <= 2; endc++) {
     for (int stat = 1; stat <= 4; stat++) {
       for (int ring = 1; ring <= 4; ring++) {
@@ -401,6 +417,7 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
   t_RUN = RUN_;
   t_Event = Event_;
   t_eventsAnalyzed = eventsAnalyzed;
+  t_luminosityblock = luminosityblock;
   // for (unsigned i=0; i<testvector_->size(); i++){
   //   int value = testvector_->at(i);
   //   testvector.push_back(value);
@@ -455,32 +472,79 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
                 std::vector<int> identifiers = debug.Getidentifiers();
                 // std::cout<<"lctdebug identifiers: "<<identifiers[0]<<" "<<identifiers[1]<<" "<<identifiers[2]<<" "<<identifiers[3]<<" "<<identifiers[4]<<std::endl;
                 if ((KeyWG==identifiers[0]) && (bx==identifiers[1]) && (Bend==identifiers[2]) && (KeyStrip==identifiers[3]) && (slope==identifiers[4]) && (!debugfound) && (is_emul)){
-                  bendinganglevector.push_back(debug.Getbendingangle());
-                  bendinganglenoalignmentcorrectionvector.push_back(debug.Getbendinganglenoalignmentcorrection());
+                  bool layer1match = debug.GetLayer1Match();
+                  bool layer2match = debug.GetLayer2Match();
                   layer2boolvector.push_back(debug.Getlayer2bool());
-                  int cluster_keystrip = debug.GetGEMClusterKeyStrip();
-                  cluster_keystripvector.push_back(cluster_keystrip);
-                  int residualwithalignment = debug.Getresidual();
-                  int residualwithoutalignment = debug.Getresidualnoalignmentcorrection();
-                  residualvector.push_back(residualwithalignment);
-                  residualnoalignmentcorrectionvector.push_back(residualwithoutalignment);
-                  int clusterroll = debug.GetClusterRoll();
-                  clusterrollvector.push_back(clusterroll);
-                  int clusterbx = debug.GetClusterBx();
-                  clusterbxvector.push_back(clusterbx);
+                  layer1matchvector.push_back(layer1match);
+                  layer2matchvector.push_back(layer2match);
+                  if (layer1match){
+                    bendinganglevectorlayer1.push_back(debug.GetbendingangleLayer1());
+                    bendinganglenoalignmentcorrectionvectorlayer1.push_back(debug.GetbendinganglenoalignmentcorrectionLayer1());
+                    int cluster_keystriplayer1 = debug.GetGEMClusterKeyStripLayer1();
+                    cluster_keystripvectorlayer1.push_back(cluster_keystriplayer1);
+                    int residualwithalignmentlayer1 = debug.GetresidualLayer1();
+                    int residualwithoutalignmentlayer1 = debug.GetresidualnoalignmentcorrectionLayer1();
+                    residualvectorlayer1.push_back(residualwithalignmentlayer1);
+                    residualnoalignmentcorrectionvectorlayer1.push_back(residualwithoutalignmentlayer1);
+                    int clusterbxlayer1 = debug.GetClusterBxLayer1();
+
+                    clusterbxvectorlayer1.push_back(clusterbxlayer1);
+                  } else {
+                    bendinganglevectorlayer1.push_back(-999);
+                    bendinganglenoalignmentcorrectionvectorlayer1.push_back(-999);
+                    cluster_keystripvectorlayer1.push_back(-999);
+                    residualvectorlayer1.push_back(-999);
+                    residualnoalignmentcorrectionvectorlayer1.push_back(-999);
+                    clusterbxvectorlayer1.push_back(-999);
+                  }
+                  if (layer2match){
+                    bendinganglevectorlayer2.push_back(debug.GetbendingangleLayer2());
+                    bendinganglenoalignmentcorrectionvectorlayer2.push_back(debug.GetbendinganglenoalignmentcorrectionLayer2());
+                    int cluster_keystriplayer2 = debug.GetGEMClusterKeyStripLayer2();
+                    cluster_keystripvectorlayer2.push_back(cluster_keystriplayer2);
+                    int residualwithalignmentlayer2 = debug.GetresidualLayer2();
+                    int residualwithoutalignmentlayer2 = debug.GetresidualnoalignmentcorrectionLayer2();
+                    residualvectorlayer2.push_back(residualwithalignmentlayer2);
+                    residualnoalignmentcorrectionvectorlayer2.push_back(residualwithoutalignmentlayer2);
+                    int clusterbxlayer2 = debug.GetClusterBxLayer2();
+                    clusterbxvectorlayer2.push_back(clusterbxlayer2);
+                  } else{
+                    bendinganglevectorlayer2.push_back(-999);
+                    bendinganglenoalignmentcorrectionvectorlayer2.push_back(-999);
+                    cluster_keystripvectorlayer2.push_back(-999);
+                    residualvectorlayer2.push_back(-999);
+                    residualnoalignmentcorrectionvectorlayer2.push_back(-999);
+                    clusterbxvectorlayer2.push_back(-999);
+                  }
+                 
+                  int clusterrolllayer1 = debug.GetClusterRoll1();
+                  int clusterrolllayer2 = debug.GetClusterRoll2();
+                  clusterrollvectorlayer1.push_back(clusterrolllayer1);
+                  clusterrollvectorlayer2.push_back(clusterrolllayer2);
+                  
                   debugfound = true;
                 }
                   
               }
               if (!debugfound){
-                bendinganglevector.push_back(-999);
-                bendinganglenoalignmentcorrectionvector.push_back(-999);
+                bendinganglevectorlayer1.push_back(-999);
+                bendinganglenoalignmentcorrectionvectorlayer1.push_back(-999);
                 layer2boolvector.push_back(false);
-                cluster_keystripvector.push_back(-999);
-                residualvector.push_back(-999);
-                residualnoalignmentcorrectionvector.push_back(-999);
-                clusterrollvector.push_back(-999);
-                clusterbxvector.push_back(-999);
+                layer1matchvector.push_back(false);
+                cluster_keystripvectorlayer1.push_back(-999);
+                residualvectorlayer1.push_back(-999);
+                residualnoalignmentcorrectionvectorlayer1.push_back(-999);
+                clusterrollvectorlayer1.push_back(-999);
+                clusterbxvectorlayer1.push_back(-999);
+
+                bendinganglevectorlayer2.push_back(-999);
+                bendinganglenoalignmentcorrectionvectorlayer2.push_back(-999);
+                layer2matchvector.push_back(false);
+                cluster_keystripvectorlayer2.push_back(-999);
+                residualvectorlayer2.push_back(-999);
+                residualnoalignmentcorrectionvectorlayer2.push_back(-999);
+                clusterrollvectorlayer2.push_back(-999);
+                clusterbxvectorlayer2.push_back(-999);
               }
             }
           }
@@ -508,15 +572,25 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
   t_bx.clear();
   t_pattern.clear();
   t_run3pattern.clear();
-  bendinganglenoalignmentcorrectionvector.clear();
-  bendinganglevector.clear();
+  bendinganglenoalignmentcorrectionvectorlayer1.clear();
+  bendinganglevectorlayer1.clear();
   layer2boolvector.clear();
-  cluster_keystripvector.clear();
-  residualvector.clear();
-  residualnoalignmentcorrectionvector.clear();
-  clusterrollvector.clear();
+  cluster_keystripvectorlayer1.clear();
+  residualvectorlayer1.clear();
+  residualnoalignmentcorrectionvectorlayer1.clear();
+  clusterrollvectorlayer1.clear();
   isme1avector.clear();
-  clusterbxvector.clear();
+  clusterbxvectorlayer1.clear();
+  layer1matchvector.clear();
+
+  bendinganglenoalignmentcorrectionvectorlayer2.clear();
+  bendinganglevectorlayer2.clear();
+  cluster_keystripvectorlayer2.clear();
+  residualvectorlayer2.clear();
+  residualnoalignmentcorrectionvectorlayer2.clear();
+  clusterrollvectorlayer2.clear();
+  clusterbxvectorlayer2.clear();
+  layer2matchvector.clear();
 }
 
 TTree* GEMCSCTriggerPrimitivesReader::bookTTree_ALCT() {
@@ -524,6 +598,7 @@ TTree* GEMCSCTriggerPrimitivesReader::bookTTree_ALCT() {
   t = fs->make<TTree>("ALCT_tree", "GEMCSCTriggerPrimitivesReader");
   t->Branch("RUN", &t_RUN, "RUN/I");
   t->Branch("Event", &t_Event, "Event/g");
+  t->Branch("LuminosityBlock", &t_luminosityblock, "LuminosityBlock/I");
   t->Branch("eventsAnalyzed", &t_eventsAnalyzed, "eventsAnalyzed/I");
   t->Branch("is_data", "std::vector<bool>", &t_is_data);
   t->Branch("is_emul", "std::vector<bool>", &t_is_emul);
@@ -545,6 +620,7 @@ TTree* GEMCSCTriggerPrimitivesReader::bookTTree_CLCT(){
   t = fs->make<TTree>("CLCT_tree", "GEMCSCTriggerPrimitivesReader");
   t->Branch("RUN", &t_RUN, "RUN/I");
   t->Branch("Event", &t_Event, "Event/g");
+  t->Branch("LuminosityBlock", &t_luminosityblock, "LuminosityBlock/I");
   t->Branch("eventsAnalyzed", &t_eventsAnalyzed, "eventsAnalyzed/I");
   t->Branch("is_data", "std::vector<bool>", &t_is_data);
   t->Branch("is_emul", "std::vector<bool>", &t_is_emul);
@@ -579,6 +655,7 @@ TTree* GEMCSCTriggerPrimitivesReader::bookTTree_LCT(){
   t = fs->make<TTree>("LCT_tree", "GEMCSCTriggerPrimitivesReader");
   t->Branch("RUN", &t_RUN, "RUN/I");
   t->Branch("Event", &t_Event, "Event/g");
+  t->Branch("LuminosityBlock", &t_luminosityblock, "LuminosityBlock/I");
   t->Branch("eventsAnalyzed", &t_eventsAnalyzed, "eventsAnalyzed/I");
   t->Branch("is_data", "std::vector<bool>", &t_is_data);
   t->Branch("is_emul", "std::vector<bool>", &t_is_emul);
@@ -598,15 +675,25 @@ TTree* GEMCSCTriggerPrimitivesReader::bookTTree_LCT(){
   t->Branch("bx", "std::vector<int>", &t_bx);
   t->Branch("pattern", "std::vector<int>", &t_pattern);
   t->Branch("run3pattern", "std::vector<int>", &t_run3pattern);
-  t->Branch("bendingangle", "std::vector<int>", &bendinganglevector);
-  t->Branch("bendinganglenoalignmentcorrection", "std::vector<int>", &bendinganglenoalignmentcorrectionvector);
+  t->Branch("bendinganglelayer1", "std::vector<int>", &bendinganglevectorlayer1);
+  t->Branch("bendinganglenoalignmentcorrectionlayer1", "std::vector<int>", &bendinganglenoalignmentcorrectionvectorlayer1);
   t->Branch("layer2bool", "std::vector<bool>", &layer2boolvector);
-  t->Branch("cluster_keystrip","std::vector<int>", &cluster_keystripvector);
-  t->Branch("residual","std::vector<int>",&residualvector);
-  t->Branch("residualnoalignmentcorrection","std::vector<int>",&residualnoalignmentcorrectionvector);
-  t->Branch("clusterroll","std::vector<int>",&clusterrollvector);
+  t->Branch("cluster_keystriplayer1","std::vector<int>", &cluster_keystripvectorlayer1);
+  t->Branch("residuallayer1","std::vector<int>",&residualvectorlayer1);
+  t->Branch("residualnoalignmentcorrectionlayer1","std::vector<int>",&residualnoalignmentcorrectionvectorlayer1);
+  t->Branch("clusterrolllayer1","std::vector<int>",&clusterrollvectorlayer1);
   t->Branch("isme1a","std::vector<bool>",&isme1avector);
-  t->Branch("clusterbx","std::vector<int>",&clusterbxvector);
+  t->Branch("clusterbxlayer1","std::vector<int>",&clusterbxvectorlayer1);
+  t->Branch("layer1match","std::vector<bool>",&layer1matchvector);
+
+  t->Branch("bendinganglelayer2", "std::vector<int>", &bendinganglevectorlayer2);
+  t->Branch("bendinganglenoalignmentcorrectionlayer2", "std::vector<int>", &bendinganglenoalignmentcorrectionvectorlayer2);
+  t->Branch("cluster_keystriplayer2","std::vector<int>", &cluster_keystripvectorlayer2);
+  t->Branch("residuallayer2","std::vector<int>",&residualvectorlayer2);
+  t->Branch("residualnoalignmentcorrectionlayer2","std::vector<int>",&residualnoalignmentcorrectionvectorlayer2);
+  t->Branch("clusterrolllayer2","std::vector<int>",&clusterrollvectorlayer2);
+  t->Branch("clusterbxlayer2","std::vector<int>",&clusterbxvectorlayer2);
+  t->Branch("layer2match","std::vector<bool>",&layer2matchvector);
   return t;
 }
 

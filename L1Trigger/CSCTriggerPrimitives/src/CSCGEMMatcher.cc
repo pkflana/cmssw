@@ -499,13 +499,24 @@ std::vector<int> CSCGEMMatcher::calculateGEMCSCBending(const CSCCLCTDigi& clct,
     isLayer2 = true;
 
   //ME1a necessitates a different treatment because of a different strip numbering scheme and strip width
-  const std::vector<int> SignedEighthStripDiff =
-      matchedClusterDistES(clct, cluster, isLayer2, true, lookupTableME11ILT, lookupTableME21ILT);
-  const unsigned eighthStripDiff = abs(SignedEighthStripDiff[0]);  //LUTs consider only absolute change
+  const std::vector<int> SignedEighthStripDifflayer1 =
+      matchedClusterDistES(clct, cluster, false, true, lookupTableME11ILT, lookupTableME21ILT);
+  const std::vector<int> SignedEighthStripDifflayer2 =
+      matchedClusterDistES(clct, cluster, true, true, lookupTableME11ILT, lookupTableME21ILT);
+  int SignedEighthStripDiff = -1;
+  if (!isLayer2){
+    SignedEighthStripDiff = SignedEighthStripDifflayer1[0];
+  } else {
+    SignedEighthStripDiff = SignedEighthStripDifflayer2[0];
+  }
+  const unsigned eighthStripDiff = abs(SignedEighthStripDiff);  //LUTs consider only absolute change
 
-  const std::vector<int> forresidual = matchedClusterDistES(clct, cluster, isLayer2, false, lookupTableME11ILT, lookupTableME21ILT);
-  int residualwithalignment = forresidual[0];
-  int residualwithoutalignment = forresidual[1];
+  const std::vector<int> forresiduallayer1 = matchedClusterDistES(clct, cluster, false, false, lookupTableME11ILT, lookupTableME21ILT);
+  int residualwithalignmentlayer1 = forresiduallayer1[0];
+  int residualwithoutalignmentlayer1 = forresiduallayer1[1];
+  const std::vector<int> forresiduallayer2 = matchedClusterDistES(clct, cluster, true, false, lookupTableME11ILT, lookupTableME21ILT);
+  int residualwithalignmentlayer2 = forresiduallayer2[0];
+  int residualwithoutalignmentlayer2 = forresiduallayer2[1];
   // std::cout << "From CSCGEMMatcher::calculateGEMCSCBending: SignedEighthStripDiff=" << SignedEighthStripDiff << "\n";
 
   //use LUTs to determine absolute slope, default 0
@@ -551,14 +562,19 @@ std::vector<int> CSCGEMMatcher::calculateGEMCSCBending(const CSCCLCTDigi& clct,
   }
 
   //account for the sign of the difference
-  slopeShift *= pow(-1, std::signbit(SignedEighthStripDiff[0]));
+  slopeShift *= pow(-1, std::signbit(SignedEighthStripDiff));
 ////////////////////////////////////////////////////////////lctdebug changes
   output.push_back(slopeShift);
-  output.push_back(SignedEighthStripDiff[0]);
-  output.push_back(SignedEighthStripDiff[1]);
-  output.push_back(SignedEighthStripDiff[2]);
-  output.push_back(residualwithalignment);
-  output.push_back(residualwithoutalignment);
+  output.push_back(SignedEighthStripDifflayer1[0]);
+  output.push_back(SignedEighthStripDifflayer1[1]);
+  output.push_back(SignedEighthStripDifflayer1[2]);
+  output.push_back(residualwithalignmentlayer1);
+  output.push_back(residualwithoutalignmentlayer1);
+  output.push_back(SignedEighthStripDifflayer2[0]);
+  output.push_back(SignedEighthStripDifflayer2[1]);
+  output.push_back(SignedEighthStripDifflayer2[2]);
+  output.push_back(residualwithalignmentlayer2);
+  output.push_back(residualwithoutalignmentlayer2);
   // return slopeShift;
   return output;
 /////////////////////////////////////////////////////////////
