@@ -77,7 +77,6 @@ void CSCGEMMotherboard::run(const CSCWireDigiCollection* wiredc,
     edm::LogError("CSCGEMMotherboard") << "run() called for GEM-CSC integrated trigger without valid GEM geometry! \n";
     return;
   }
-
   // Step 2: Run the processors
   CSCMotherboard::RunContext mbc{context.cscGeometry_,
                                  context.lookupTableCCLUT_,
@@ -192,7 +191,11 @@ void CSCGEMMotherboard::matchALCTCLCTGEM(const CSCL1TPLookupTableME11ILT* lookup
     // ALCT + CLCT + GEM
 
     for (unsigned gmbx = 0; gmbx < alct_gem_bx_window_size_; gmbx++) {
+      if (preferred_bx_match(gmbx)==-1){
+        continue;
+      }
       unsigned bx_gem = bx_alct + preferred_bx_match(gmbx);
+      // std::cout<<"ALCT+CLCT+GEM, alct_gem_bx_window_size_: "<<alct_gem_bx_window_size_<<" bx_alct: "<<bx_alct<<" preferred_bx_match(gmbx): "<<preferred_bx_match(gmbx)<<" gmbx: "<<gmbx<<std::endl;
       clustersGEM = clusterProc_->getClusters(bx_gem, GEMClusterProcessor::AllClusters);
       // std::cout<<"clustersGEMempty: "<<clustersGEM.empty()<<std::endl;
       if (!clustersGEM.empty()) {
@@ -439,7 +442,7 @@ void CSCGEMMotherboard::correlateLCTsGEM(const CSCALCTDigi& ALCT,
   // We can now check possible triplets and construct all LCTs with
   // valid ALCT, valid CLCTs and GEM clusters
   GEMInternalCluster bestCluster;
-  // std::cout << "CSCGEMMotherboard::correlateLCTsGEM option ALCT-CLCT-GEM\n";
+  std::cout << "CSCGEMMotherboard::correlateLCTsGEM option ALCT-CLCT-GEM\n";
   // std::cout << "about to do bestclusterloc"<<std::endl;
   cscGEMMatcher_->bestClusterLoc(ALCT, CLCT, ValidClusters, lookupTableME11ILT, lookupTableME21ILT, bestCluster);
   // std::cout << "after bestclusterloc"<<std::endl;

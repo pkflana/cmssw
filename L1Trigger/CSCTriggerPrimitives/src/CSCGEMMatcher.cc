@@ -149,12 +149,12 @@ void CSCGEMMatcher::matchingClustersLoc(const CSCCLCTDigi& clct,
     return;
 
   const bool isME1a(station_ == 1 and clct.getKeyStrip() > CSCConstants::MAX_HALF_STRIP_ME1B);
-  std::cout<<"MAX_HALF_STRIP_ME1B: "<<CSCConstants::MAX_HALF_STRIP_ME1B<<std::endl;
-  std::cout<<"station_: "<<station_<<" clct.getKeyStrip(): "<<clct.getKeyStrip()<<" isME1a: "<<isME1a<<std::endl;
+  // std::cout<<"MAX_HALF_STRIP_ME1B: "<<CSCConstants::MAX_HALF_STRIP_ME1B<<std::endl;
+  // std::cout<<"station_: "<<station_<<" clct.getKeyStrip(): "<<clct.getKeyStrip()<<" isME1a: "<<isME1a<<std::endl;
 
   //determine window size
   unsigned eighthStripCut = isEven_ ? 4 * maxDeltaHsEven_ : 4 * maxDeltaHsOdd_;  // Cut in 1/8 = 4 * cut in 1/2
-  std::cout<<"eighthstripcut: "<<eighthStripCut<<" isEven_: "<<isEven_<<std::endl;
+  // std::cout<<"eighthstripcut: "<<eighthStripCut<<" isEven_: "<<isEven_<<std::endl;
 
   for (const auto& cl : clusters) {
     // std::cout << "GEM cluster: " << cl << std::endl;

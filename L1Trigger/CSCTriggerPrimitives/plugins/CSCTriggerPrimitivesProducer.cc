@@ -306,7 +306,6 @@ void CSCTriggerPrimitivesProducer::produce(edm::Event& ev, const edm::EventSetup
       gemPadClusters = gemPadDigiClusters.product();
     }
   }
-
   // Fill output collections if valid input collections are available.
   if (wireDigis.isValid() && compDigis.isValid()) {
     const CSCBadChambers* temp = nullptr;
