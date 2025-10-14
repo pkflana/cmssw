@@ -9,6 +9,8 @@
 #define foreach BOOST_FOREACH
 
 //user include files below
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
+#include "DataFormats/CSCDigi/interface/CSCConstants.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -67,12 +69,14 @@
 #include "TLorentzVector.h"
 
 #include "DataFormats/LCTDebug/interface/LCTDebug.h"
+#include "DataFormats/MuonDetId/interface/CSCTriggerNumbering.h"
 
 using namespace edm;
 
 class GEMCSCTriggerPrimitivesReader : public edm::one::EDAnalyzer<> {
 public:
   explicit GEMCSCTriggerPrimitivesReader(const edm::ParameterSet&);
+    // geomToken_(esConsumes());
   ~GEMCSCTriggerPrimitivesReader(){};
 private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
@@ -82,6 +86,7 @@ private:
   void SaveALCTs(const CSCALCTDigiCollection* alcts, bool is_data, bool is_emul);
   void SaveCLCTs(const CSCCLCTDigiCollection* clcts, bool is_data, bool is_emul);
   void SaveLCTs(const CSCCorrelatedLCTDigiCollection* lcts, bool is_data, bool is_emul, const std::vector<LCTDebugobject>* lctdebugvector_);
+  GlobalPoint getGlobalPosition(CSCDetId& cscId, const CSCCorrelatedLCTDigi& lct);
 
   int eventsAnalyzed;
 
@@ -165,21 +170,31 @@ private:
 
   edm::EDGetTokenT<std::vector<LCTDebugobject>> lctdebugtoken_data;
   edm::EDGetTokenT<std::vector<LCTDebugobject>> lctdebugtoken_emul;
+
+  // edm::ESHandle<GEMGeometry> GEMGeometry_;
+  // const edm::ESGetToken<GEMGeometry, MuonGeometryRecord> gemGeomToken_;
+  const edm::ESGetToken<CSCGeometry, MuonGeometryRecord> cscGeomToken_;
   // // Producer's labels
   std::string lctProducerData_;
   std::string lctProducerEmul_;
+  edm::ParameterSet config;
 
   bool debug;
+  const CSCGeometry* cscGeometry_;
+  edm::ESHandle<CSCGeometry> CSCGeometry_;
+  // const edm::ESGetToken<CSCGeometry, MuonGeometryRecord> geomToken_;
+  // const edm::ConsumesCollector iC;
 };
 
 
-GEMCSCTriggerPrimitivesReader::GEMCSCTriggerPrimitivesReader(const edm::ParameterSet& iConfig) : eventsAnalyzed(0) {
+GEMCSCTriggerPrimitivesReader::GEMCSCTriggerPrimitivesReader(const edm::ParameterSet& iConfig) : eventsAnalyzed(0), cscGeomToken_(esConsumes()) {
     lctProducerData_ = iConfig.getUntrackedParameter<std::string>("CSCLCTProducerData", "muonCSCDigis");
     lctProducerEmul_ = iConfig.getUntrackedParameter<std::string>("CSCLCTProducerEmul", "cscTriggerPrimitiveDigis");//simCscTriggerPrimitivesDigis for simulation
     debug = iConfig.getParameter<bool>("debug");
     if(debug) std::cout<<"lctProducerData: "<<lctProducerData_<<std::endl;
     std::cout<<"lctProducerEmul: "<<lctProducerEmul_<<std::endl;
-
+    config = iConfig;
+    // cscGeomToken_ = iC.esConsumes<CSCGeometry, MuonGeometryRecord>();
     //consumes Data
     alcts_d_token_ = consumes<CSCALCTDigiCollection>(edm::InputTag(lctProducerData_, "MuonCSCALCTDigi"));
     clcts_d_token_ = consumes<CSCCLCTDigiCollection>(edm::InputTag(lctProducerData_, "MuonCSCCLCTDigi"));
@@ -203,7 +218,8 @@ GEMCSCTriggerPrimitivesReader::GEMCSCTriggerPrimitivesReader(const edm::Paramete
 void
 GEMCSCTriggerPrimitivesReader::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     ++eventsAnalyzed;
-
+    // cscGeometry_ = &iSetup.getData(geomToken_);
+    CSCGeometry_ = &iSetup.getData(cscGeomToken_);
     RUN_ = iEvent.id().run();
     Event_ = iEvent.id().event();
     luminosityblock = iEvent.id().luminosityBlock();
@@ -275,7 +291,35 @@ GEMCSCTriggerPrimitivesReader::analyze(const edm::Event& iEvent, const edm::Even
 }
 
 
-
+GlobalPoint GEMCSCTriggerPrimitivesReader::getGlobalPosition(CSCDetId& cscId, const CSCCorrelatedLCTDigi& lct){
+  std::cout<<"global position beginning"<<std::endl;
+  CSCDetId keyId(cscId.endcap(), cscId.station(), cscId.ring(), cscId.chamber(), CSCConstants::KEY_CLCT_LAYER);
+  float fractional_strip = lct.getFractionalStrip();
+  // case ME1/1
+  if (cscId.station() == 1 and (cscId.ring() == 4 || cscId.ring() == 1)) {
+    int ring = 1;  // Default to ME1/b
+    if (lct.getStrip() > CSCConstants::MAX_HALF_STRIP_ME1B) {
+      ring = 4;  // Change to ME1/a if the HalfStrip Number exceeds the range of ME1/b
+      fractional_strip -= CSCConstants::NUM_STRIPS_ME1B;
+    }
+    CSCDetId cscId_(cscId.endcap(), cscId.station(), ring, cscId.chamber(), cscId.layer());
+    cscId = cscId_;
+  }
+  std::cout<<"about to get global position "<<cscId.endcap()<<" "<<cscId.station()<<" "<<cscId.ring()<<" "<<cscId.chamber()<<std::endl;
+  std::cout<<"308"<<std::endl;
+  // regular cases
+  const auto& chamber = cscGeometry_->chamber(cscId);
+  std::cout<<"311"<<std::endl;
+  const auto& layer_geo = chamber->layer(CSCConstants::KEY_CLCT_LAYER)->geometry();
+  std::cout<<"313"<<std::endl;
+  // LCT::getKeyWG() also starts from 0
+  float wire = layer_geo->middleWireOfGroup(lct.getKeyWG() + 1);
+  std::cout<<"316"<<std::endl;
+  const LocalPoint& csc_intersect = layer_geo->intersectionOfStripAndWire(fractional_strip, wire);
+  std::cout<<"318"<<std::endl;
+  const GlobalPoint& csc_gp = cscGeometry_->idToDet(keyId)->surface().toGlobal(csc_intersect);
+  return csc_gp;
+}
 
 
 
@@ -418,6 +462,8 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
   t_Event = Event_;
   t_eventsAnalyzed = eventsAnalyzed;
   t_luminosityblock = luminosityblock;
+  // edm::ParameterSet srLUTset;
+  // srLUTset.addUntrackedParameter<bool>("ReadLUTs",true);
   // for (unsigned i=0; i<testvector_->size(); i++){
   //   int value = testvector_->at(i);
   //   testvector.push_back(value);
@@ -432,6 +478,9 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
           const auto& range = lcts->get(detid);
           for (auto digiIt = range.first; digiIt != range.second; digiIt++) {
             if ((*digiIt).isValid()) {
+              GlobalPoint test = getGlobalPosition(detid, *digiIt);
+              std::cout<<"got position"<<std::endl;
+              std::cout<<test.eta()<<std::endl;
               // std::cout << "LCT " << (*digiIt) <<" data:emul "<< is_data <<":"<< is_emul << std::endl;//if (debug) 
               lctV.push_back(*digiIt);
               //Fill TTree
@@ -459,9 +508,8 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
               Bend = (*digiIt).getBend();
               KeyStrip = (*digiIt).getStrip();
               slope = (*digiIt).getSlope();
-              // std::cout<<"lct identifiers: "<<KeyWG<<" "<<bx<<" "<<Bend<<" "<<KeyStrip<<" "<<slope<<std::endl;
               bool isme1a = false;
-              if ((stat==1) && ((*digiIt).getStrip() > 127)){
+              if ((stat==1) && ((*digiIt).getStrip() > CSCConstants::MAX_HALF_STRIP_ME1B)){
                 isme1a = true;
               }
               isme1avector.push_back(isme1a);
