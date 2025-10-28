@@ -17,6 +17,9 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "DataFormats/CSCDigi/interface/CSCConstants.h"
+#include "DataFormats/Common/interface/Handle.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -29,6 +32,7 @@
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
+#include "Validation/MuonCSCDigis/interface/CSCStubMatcher.h"
 
 #include "MagneticField/Engine/interface/MagneticField.h"
 
@@ -132,6 +136,8 @@ private:
   std::vector<int> t_comp_code;
   std::vector<int> t_collisionB;
   std::vector<int> t_accel;
+  std::vector<float> t_eta;
+  std::vector<float> t_phi;
 
   std::vector<int> bendinganglevectorlayer1;
   std::vector<int> bendinganglenoalignmentcorrectionvectorlayer1;
@@ -171,9 +177,6 @@ private:
   edm::EDGetTokenT<std::vector<LCTDebugobject>> lctdebugtoken_data;
   edm::EDGetTokenT<std::vector<LCTDebugobject>> lctdebugtoken_emul;
 
-  // edm::ESHandle<GEMGeometry> GEMGeometry_;
-  // const edm::ESGetToken<GEMGeometry, MuonGeometryRecord> gemGeomToken_;
-  const edm::ESGetToken<CSCGeometry, MuonGeometryRecord> cscGeomToken_;
   // // Producer's labels
   std::string lctProducerData_;
   std::string lctProducerEmul_;
@@ -181,26 +184,26 @@ private:
 
   bool debug;
   const CSCGeometry* cscGeometry_;
-  edm::ESHandle<CSCGeometry> CSCGeometry_;
-  // const edm::ESGetToken<CSCGeometry, MuonGeometryRecord> geomToken_;
+  edm::ESGetToken<CSCGeometry, MuonGeometryRecord> cscGeomToken_;
+  // edm::ESHandle<CSCGeometry> CSCGeometry_;
   // const edm::ConsumesCollector iC;
 };
 
 
-GEMCSCTriggerPrimitivesReader::GEMCSCTriggerPrimitivesReader(const edm::ParameterSet& iConfig) : eventsAnalyzed(0), cscGeomToken_(esConsumes()) {
+GEMCSCTriggerPrimitivesReader::GEMCSCTriggerPrimitivesReader(const edm::ParameterSet& iConfig) : eventsAnalyzed(0) {
     lctProducerData_ = iConfig.getUntrackedParameter<std::string>("CSCLCTProducerData", "muonCSCDigis");
     lctProducerEmul_ = iConfig.getUntrackedParameter<std::string>("CSCLCTProducerEmul", "cscTriggerPrimitiveDigis");//simCscTriggerPrimitivesDigis for simulation
     debug = iConfig.getParameter<bool>("debug");
     if(debug) std::cout<<"lctProducerData: "<<lctProducerData_<<std::endl;
     std::cout<<"lctProducerEmul: "<<lctProducerEmul_<<std::endl;
     config = iConfig;
-    // cscGeomToken_ = iC.esConsumes<CSCGeometry, MuonGeometryRecord>();
+
     //consumes Data
     alcts_d_token_ = consumes<CSCALCTDigiCollection>(edm::InputTag(lctProducerData_, "MuonCSCALCTDigi"));
     clcts_d_token_ = consumes<CSCCLCTDigiCollection>(edm::InputTag(lctProducerData_, "MuonCSCCLCTDigi"));
     lcts_tmb_d_token_ = consumes<CSCCorrelatedLCTDigiCollection>(edm::InputTag(lctProducerData_, "MuonCSCCorrelatedLCTDigi"));
     lctdebugtoken_data = consumes<std::vector<LCTDebugobject>>(edm::InputTag(lctProducerEmul_, "LCTDebugvector"));
-    
+
 
     //consumes Emul
     alcts_e_token_ = consumes<CSCALCTDigiCollection>(edm::InputTag(lctProducerEmul_));
@@ -212,14 +215,16 @@ GEMCSCTriggerPrimitivesReader::GEMCSCTriggerPrimitivesReader(const edm::Paramete
     CLCT_tree = bookTTree_CLCT();
     LCT_tree = bookTTree_LCT();
 
+
+    cscGeomToken_ = esConsumes<CSCGeometry, MuonGeometryRecord>();
+
   }
 
 
 void
 GEMCSCTriggerPrimitivesReader::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     ++eventsAnalyzed;
-    // cscGeometry_ = &iSetup.getData(geomToken_);
-    CSCGeometry_ = &iSetup.getData(cscGeomToken_);
+    cscGeometry_ = &iSetup.getData(cscGeomToken_);
     RUN_ = iEvent.id().run();
     Event_ = iEvent.id().event();
     luminosityblock = iEvent.id().luminosityBlock();
@@ -246,7 +251,7 @@ GEMCSCTriggerPrimitivesReader::analyze(const edm::Event& iEvent, const edm::Even
     iEvent.getByToken(clcts_e_token_, clcts_emul);
     iEvent.getByToken(lcts_tmb_e_token_, lcts_tmb_emul);
     iEvent.getByToken(lctdebugtoken_emul, lctdebugvectorhandle_emul);
-    
+
         // Save ALCTs
     if (alcts_data.isValid()) {
       bool is_data = true;
@@ -292,7 +297,6 @@ GEMCSCTriggerPrimitivesReader::analyze(const edm::Event& iEvent, const edm::Even
 
 
 GlobalPoint GEMCSCTriggerPrimitivesReader::getGlobalPosition(CSCDetId& cscId, const CSCCorrelatedLCTDigi& lct){
-  std::cout<<"global position beginning"<<std::endl;
   CSCDetId keyId(cscId.endcap(), cscId.station(), cscId.ring(), cscId.chamber(), CSCConstants::KEY_CLCT_LAYER);
   float fractional_strip = lct.getFractionalStrip();
   // case ME1/1
@@ -305,18 +309,12 @@ GlobalPoint GEMCSCTriggerPrimitivesReader::getGlobalPosition(CSCDetId& cscId, co
     CSCDetId cscId_(cscId.endcap(), cscId.station(), ring, cscId.chamber(), cscId.layer());
     cscId = cscId_;
   }
-  std::cout<<"about to get global position "<<cscId.endcap()<<" "<<cscId.station()<<" "<<cscId.ring()<<" "<<cscId.chamber()<<std::endl;
-  std::cout<<"308"<<std::endl;
   // regular cases
   const auto& chamber = cscGeometry_->chamber(cscId);
-  std::cout<<"311"<<std::endl;
   const auto& layer_geo = chamber->layer(CSCConstants::KEY_CLCT_LAYER)->geometry();
-  std::cout<<"313"<<std::endl;
   // LCT::getKeyWG() also starts from 0
   float wire = layer_geo->middleWireOfGroup(lct.getKeyWG() + 1);
-  std::cout<<"316"<<std::endl;
   const LocalPoint& csc_intersect = layer_geo->intersectionOfStripAndWire(fractional_strip, wire);
-  std::cout<<"318"<<std::endl;
   const GlobalPoint& csc_gp = cscGeometry_->idToDet(keyId)->surface().toGlobal(csc_intersect);
   return csc_gp;
 }
@@ -403,7 +401,7 @@ void GEMCSCTriggerPrimitivesReader::SaveCLCTs(const CSCCLCTDigiCollection* clcts
               t_endcap.push_back(endc);
               t_station.push_back(stat);
               t_ring.push_back(ring);
-              t_chamber.push_back(cham);  
+              t_chamber.push_back(cham);
               t_isValid.push_back((*digiIt).isValid());
               t_quality.push_back((*digiIt).getQuality());
               t_pattern.push_back((*digiIt).getPattern());
@@ -478,10 +476,12 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
           const auto& range = lcts->get(detid);
           for (auto digiIt = range.first; digiIt != range.second; digiIt++) {
             if ((*digiIt).isValid()) {
-              GlobalPoint test = getGlobalPosition(detid, *digiIt);
-              std::cout<<"got position"<<std::endl;
-              std::cout<<test.eta()<<std::endl;
-              // std::cout << "LCT " << (*digiIt) <<" data:emul "<< is_data <<":"<< is_emul << std::endl;//if (debug) 
+              GlobalPoint globalposition = getGlobalPosition(detid, *digiIt);
+              t_eta.push_back(globalposition.eta());
+              t_phi.push_back(globalposition.phi());
+              // std::cout<<test.eta()<<std::endl;
+              // std::cout<<"phi"<<test.phi()<<std::endl;
+              // std::cout << "LCT " << (*digiIt) <<" data:emul "<< is_data <<":"<< is_emul << std::endl;//if (debug)
               lctV.push_back(*digiIt);
               //Fill TTree
               t_is_data.push_back(is_data);
@@ -515,7 +515,7 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
               isme1avector.push_back(isme1a);
               bool debugfound = false;
               for (unsigned debugnum=0; debugnum<lctdebugvector_->size(); debugnum++){
-                
+
                 LCTDebugobject debug = lctdebugvector_->at(debugnum);
                 std::vector<int> identifiers = debug.Getidentifiers();
                 // std::cout<<"lctdebug identifiers: "<<identifiers[0]<<" "<<identifiers[1]<<" "<<identifiers[2]<<" "<<identifiers[3]<<" "<<identifiers[4]<<std::endl;
@@ -564,15 +564,15 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
                     residualnoalignmentcorrectionvectorlayer2.push_back(-999);
                     clusterbxvectorlayer2.push_back(-999);
                   }
-                 
+
                   int clusterrolllayer1 = debug.GetClusterRoll1();
                   int clusterrolllayer2 = debug.GetClusterRoll2();
                   clusterrollvectorlayer1.push_back(clusterrolllayer1);
                   clusterrollvectorlayer2.push_back(clusterrolllayer2);
-                  
+
                   debugfound = true;
                 }
-                  
+
               }
               if (!debugfound){
                 bendinganglevectorlayer1.push_back(-999);
@@ -620,6 +620,8 @@ void GEMCSCTriggerPrimitivesReader::SaveLCTs(const CSCCorrelatedLCTDigiCollectio
   t_bx.clear();
   t_pattern.clear();
   t_run3pattern.clear();
+  t_eta.clear();
+  t_phi.clear();
   bendinganglenoalignmentcorrectionvectorlayer1.clear();
   bendinganglevectorlayer1.clear();
   layer2boolvector.clear();
@@ -742,6 +744,8 @@ TTree* GEMCSCTriggerPrimitivesReader::bookTTree_LCT(){
   t->Branch("clusterrolllayer2","std::vector<int>",&clusterrollvectorlayer2);
   t->Branch("clusterbxlayer2","std::vector<int>",&clusterbxvectorlayer2);
   t->Branch("layer2match","std::vector<bool>",&layer2matchvector);
+  t->Branch("eta","std::vector<float>",&t_eta);
+  t->Branch("phi","std::vector<float>",&t_phi);
   return t;
 }
 
