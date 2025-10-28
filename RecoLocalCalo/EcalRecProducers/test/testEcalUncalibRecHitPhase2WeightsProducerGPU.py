@@ -13,7 +13,7 @@ process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.EventContent.EventContent_cff')
 process.load('SimGeneral.MixingModule.mixNoPU_cfi')
-process.load('Configuration.Geometry.GeometryExtended2026D60Reco_cff')
+process.load('Configuration.Geometry.GeometryExtendedRun4D60Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.RawToDigi_cff')
 process.load('Configuration.StandardSequences.L1Reco_cff')
@@ -79,8 +79,8 @@ process.configurationMetadata = cms.untracked.PSet(
 
 # Set up the DQM GPU validation task
 process.ecalMonitorTaskEcalOnly.workers = ["GpuTask"]
-process.ecalMonitorTaskEcalOnly.collectionTags.EBCpuUncalibRecHit = "ecalUncalibRecHitPhase2@cpu:EcalUncalibRecHitsEB"
-process.ecalMonitorTaskEcalOnly.collectionTags.EBGpuUncalibRecHit = "ecalUncalibRecHitPhase2@cuda:EcalUncalibRecHitsEB"
+process.ecalMonitorTaskEcalOnly.collectionTags.EBCpuUncalibRecHit = "ecalUncalibRecHitPhase2Legacy:EcalUncalibRecHitsEB"
+process.ecalMonitorTaskEcalOnly.collectionTags.EBGpuUncalibRecHit = "ecalUncalibRecHitPhase2:EcalUncalibRecHitsEB"
 
 # Output definition
 outputCommand = process.FEVTDEBUGHLTEventContent.outputCommands

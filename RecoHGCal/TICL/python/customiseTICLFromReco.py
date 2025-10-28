@@ -2,10 +2,10 @@
 from RecoHGCal.TICL.iterativeTICL_cff import *
 from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClustersEE, hgcalLayerClustersHSi, hgcalLayerClustersHSci
 from RecoLocalCalo.HGCalRecProducers.hgcalMergeLayerClusters_cfi import hgcalMergeLayerClusters
-from RecoHGCal.TICL.ticlDumper_cfi import ticlDumper
+from RecoHGCal.TICL.ticlDumper_cff import ticlDumper
 # Validation
-from Validation.HGCalValidation.HGCalValidator_cfi import *
-from RecoLocalCalo.HGCalRecProducers.recHitMapProducer_cfi import recHitMapProducer
+from Validation.HGCalValidation.HGCalValidator_cff import *
+from RecoLocalCalo.HGCalRecProducers.recHitMapProducer_cff import recHitMapProducer
 
 # Load DNN ESSource
 from RecoTracker.IterativeTracking.iterativeTk_cff import trackdnn_source
@@ -13,7 +13,9 @@ from RecoTracker.IterativeTracking.iterativeTk_cff import trackdnn_source
 # Automatic addition of the customisation function from RecoHGCal.Configuration.RecoHGCal_EventContent_cff
 from RecoHGCal.Configuration.RecoHGCal_EventContent_cff import customiseHGCalOnlyEventContent
 from SimCalorimetry.HGCalAssociatorProducers.simTracksterAssociatorByEnergyScore_cfi import simTracksterAssociatorByEnergyScore as simTsAssocByEnergyScoreProducer
-from SimCalorimetry.HGCalAssociatorProducers.TSToSimTSAssociation_cfi import tracksterSimTracksterAssociationLinking, tracksterSimTracksterAssociationPR, tracksterSimTracksterAssociationLinkingbyCLUE3D, tracksterSimTracksterAssociationPRbyCLUE3D, tracksterSimTracksterAssociationLinkingPU, tracksterSimTracksterAssociationPRPU
+from SimCalorimetry.HGCalAssociatorProducers.TSToSimTSAssociation_cfi import  allTrackstersToSimTrackstersAssociationsByLCs
+from SimCalorimetry.HGCalAssociatorProducers.TSToSimTSAssociationByHits_cfi import allTrackstersToSimTrackstersAssociationsByHits
+from SimCalorimetry.HGCalAssociatorProducers.SimClusterToCaloParticleAssociation_cfi import SimClusterToCaloParticleAssociation
 
 
 def customiseTICLFromReco(process):
@@ -39,12 +41,9 @@ def customiseTICLFromReco(process):
                                                 process.layerClusterSimClusterAssociationProducer,
                                                 process.simTsAssocByEnergyScoreProducer,
                                                 process.simTracksterHitLCAssociatorByEnergyScoreProducer,
-                                                process.tracksterSimTracksterAssociationLinking,
-                                                process.tracksterSimTracksterAssociationPR,
-                                                process.tracksterSimTracksterAssociationLinkingbyCLUE3D,
-                                                process.tracksterSimTracksterAssociationPRbyCLUE3D,
-                                                process.tracksterSimTracksterAssociationLinkingPU,
-                                                process.tracksterSimTracksterAssociationPRPU
+                                                process.allTrackstersToSimTrackstersAssociationsByLCs,
+                                                process.allTrackstersToSimTrackstersAssociationsByHits,
+                                                process.SimClusterToCaloParticleAssociation,
                                                 )
 
     process.TICL_Validator = cms.Task(process.hgcalValidator)
@@ -66,30 +65,12 @@ def customiseTICLFromReco(process):
     return process
 
 
-def customiseTICLForDumper(process):
+def customiseTICLForDumper(process, histoName="histo.root"):
 
-    process.ticlDumper = ticlDumper.clone(
-        saveLCs=True,
-        saveCLUE3DTracksters=True,
-        saveTrackstersMerged=True,
-        saveSimTrackstersSC=True,
-        saveSimTrackstersCP=True,
-        saveTICLCandidate=True,
-        saveSimTICLCandidate=True,
-        saveTracks=True,
-        saveAssociations=True,
-    )
-
-    from Configuration.ProcessModifiers.ticl_v5_cff import ticl_v5
-    ticl_v5.toModify(process.ticlDumper,
-                     # trackstersclue3d = cms.InputTag('mergedTrackstersProducer'), # For future separate iterations
-                     trackstersclue3d = cms.InputTag('ticlTrackstersCLUE3DHigh'),
-                     ticlcandidates = cms.InputTag("ticlCandidate"),
-                     trackstersmerged = cms.InputTag("ticlCandidate"),
-                     trackstersInCand = cms.InputTag("ticlCandidate"))
+    process.ticlDumper = ticlDumper.clone()
 
     process.TFileService = cms.Service("TFileService",
-                                       fileName=cms.string("histo.root")
+                                       fileName=cms.string(histoName)
                                        )
     process.FEVTDEBUGHLToutput_step = cms.EndPath(
         process.FEVTDEBUGHLToutput + process.ticlDumper)

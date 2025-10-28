@@ -1,6 +1,8 @@
 // Original author: Leonardo Cristella
 
 // user include files
+#include <memory>
+
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/global/EDProducer.h"
 
@@ -38,7 +40,7 @@ TSToSimTSHitLCAssociatorByEnergyScoreProducer::TSToSimTSHitLCAssociatorByEnergyS
       caloGeometry_(esConsumes<CaloGeometry, CaloGeometryRecord>()),
       hardScatterOnly_(ps.getParameter<bool>("hardScatterOnly")),
       hits_label_(ps.getParameter<std::vector<edm::InputTag>>("hits")) {
-  rhtools_.reset(new hgcal::RecHitTools());
+  rhtools_ = std::make_shared<hgcal::RecHitTools>();
 
   for (auto &label : hits_label_) {
     hits_token_.push_back(consumes<HGCRecHitCollection>(label));
@@ -65,8 +67,24 @@ void TSToSimTSHitLCAssociatorByEnergyScoreProducer::produce(edm::StreamID,
     }
   }
 
-  const auto hitMap = &iEvent.get(hitMap_);
+  if (hits.empty()) {
+    edm::LogWarning("TSToSimTSHitLCAssociatorByEnergyScoreProducer")
+        << "No hits collected. Producing empty associator.";
+  }
 
+  if (!iEvent.getHandle(hitMap_)) {
+    edm::LogWarning("TSToSimTSHitLCAssociatorByEnergyScoreProducer")
+        << "Hit map not valid. Producing empty associator.";
+
+    const std::unordered_map<DetId, const unsigned int> hitMap;  // empty map
+    auto impl = std::make_unique<TSToSimTSHitLCAssociatorByEnergyScoreImpl>(
+        iEvent.productGetter(), hardScatterOnly_, rhtools_, &hitMap, hits);
+    auto emptyAssociator = std::make_unique<ticl::TracksterToSimTracksterHitLCAssociator>(std::move(impl));
+    iEvent.put(std::move(emptyAssociator));
+    return;
+  }
+
+  const auto hitMap = &iEvent.get(hitMap_);
   auto impl = std::make_unique<TSToSimTSHitLCAssociatorByEnergyScoreImpl>(
       iEvent.productGetter(), hardScatterOnly_, rhtools_, hitMap, hits);
   auto toPut = std::make_unique<ticl::TracksterToSimTracksterHitLCAssociator>(std::move(impl));

@@ -17,6 +17,7 @@ from DQMServices.Components.DQMFEDIntegrityClient_cff import *
 from DQMOffline.L1Trigger.L1TriggerDqmOffline_cff import *
 from DQM.SiTrackerPhase2.Phase2TrackerDQMHarvesting_cff import *
 from DQM.SiPixelHeterogeneous.SiPixelHeterogenousDQMHarvesting_cff import *
+from DQMOffline.Trigger.PrimaryVertexMonitoring_Client_cff import *
 
 DQMNone = cms.Sequence()
 
@@ -84,6 +85,7 @@ DQMOffline_SecondStepDPG_Express = cms.Sequence(
 from DQM.TrackingMonitorClient.TrackingClientConfig_Tier0_cff import *
 from DQMOffline.Muon.muonQualityTests_cff import *
 from DQMOffline.EGamma.egammaPostProcessing_cff import *
+from DQMOffline.HLTScouting.HLTScoutingPostProcessing_cff import *
 from DQMOffline.Trigger.DQMOffline_Trigger_Client_cff import *
 from DQMOffline.Trigger.DQMOffline_HLT_Client_cff import *
 from DQMOffline.RecoB.dqmCollector_cff import *
@@ -128,10 +130,7 @@ DQMOffline_SecondStepPOG = cms.Sequence(
                                          DQMOffline_SecondStep_PrePOG *
                                          DQMMessageLoggerClientSeq )
 
-
-
-
-HLTMonitoringClient = cms.Sequence(trackingMonitorClientHLT * trackEfficiencyMonitoringClientHLT * trackingForDisplacedJetMonitorClientHLT)
+HLTMonitoringClient = cms.Sequence(trackingMonitorClientHLT * trackEfficiencyMonitoringClientHLT * trackingForDisplacedJetMonitorClientHLT * hltVerticesMonitoringClient)
 HLTMonitoringClientPA= cms.Sequence(trackingMonitorClientHLT * PAtrackingMonitorClientHLT)
 
 DQMOffline_SecondStep = cms.Sequence(
@@ -267,10 +266,14 @@ DQMHarvestEGamma = cms.Sequence( egammaPostProcessing )
 
 DQMHarvestBTag = cms.Sequence( bTagCollectorSequenceDATA )
 
+# HLT Scouting trigger sequence
+DQMHarvestHLTScouting = cms.Sequence( hltScoutingPostProcessing )
+
 from PhysicsTools.NanoAOD.nanoDQM_cff import *
 from Validation.RecoParticleFlow.DQMForPF_MiniAOD_cff import *
 from DQMOffline.RecoB.bTagMiniDQM_cff import *
 
 DQMHarvestMiniAOD = cms.Sequence( dataCertificationJetMETSequence * muonQualityTests_miniAOD * DQMHarvestPF * bTagMiniDQMHarvesting)
+DQMHarvestMiniAODBTagOnly = cms.Sequence(bTagMiniDQMHarvesting)
 DQMHarvestNanoAOD = cms.Sequence( nanoHarvest )
 

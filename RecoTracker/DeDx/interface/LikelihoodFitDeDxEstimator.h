@@ -1,12 +1,13 @@
 #ifndef RecoTracker_DeDx_LikelihoodFitDeDxEstimator_h
 #define RecoTracker_DeDx_LikelihoodFitDeDxEstimator_h
 
+#include <cmath>
 #include "RecoTracker/DeDx/interface/BaseDeDxEstimator.h"
 #include "DataFormats/TrackReco/interface/DeDxHit.h"
 
 class LikelihoodFitDeDxEstimator : public BaseDeDxEstimator {
 public:
-  LikelihoodFitDeDxEstimator(const edm::ParameterSet& iConfig){};
+  LikelihoodFitDeDxEstimator(const edm::ParameterSet& iConfig) {}
 
   std::pair<float, float> dedx(const reco::DeDxHitCollection& Hits) override {
     if (Hits.empty())

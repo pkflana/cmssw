@@ -12,13 +12,20 @@
 #include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 
+#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
+
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/HGCalReco/interface/Trackster.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
 
-#include "SimDataFormats/Associations/interface/TracksterToSimTracksterHitLCAssociator.h"
+#include "SimDataFormats/Associations/interface/TICLAssociationMap.h"
 
 #include "DQMServices/Core/interface/DQMStore.h"
+
+namespace ticl {
+  using TracksterToTracksterMap =
+      ticl::AssociationMap<ticl::mapWithSharedEnergyAndScore, std::vector<ticl::Trackster>, std::vector<ticl::Trackster>>;
+}
 
 struct TICLCandidateValidatorHistograms {
   dqm::reco::MonitorElement* h_tracksters_in_candidate;
@@ -63,31 +70,39 @@ struct TICLCandidateValidatorHistograms {
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_energy_candidate_track;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_energy_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_energy_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_energy_candidate_tot;
   std::vector<dqm::reco::MonitorElement*> h_den_fake_chg_pt_candidate;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_pt_candidate_track;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_pt_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_pt_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_pt_candidate_tot;
   std::vector<dqm::reco::MonitorElement*> h_den_fake_chg_eta_candidate;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_eta_candidate_track;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_eta_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_eta_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_eta_candidate_tot;
   std::vector<dqm::reco::MonitorElement*> h_den_fake_chg_phi_candidate;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_phi_candidate_track;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_phi_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_phi_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_chg_phi_candidate_tot;
 
   std::vector<dqm::reco::MonitorElement*> h_den_fake_neut_energy_candidate;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_energy_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_energy_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_energy_candidate_tot;
   std::vector<dqm::reco::MonitorElement*> h_den_fake_neut_pt_candidate;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_pt_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_pt_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_pt_candidate_tot;
   std::vector<dqm::reco::MonitorElement*> h_den_fake_neut_eta_candidate;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_eta_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_eta_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_eta_candidate_tot;
   std::vector<dqm::reco::MonitorElement*> h_den_fake_neut_phi_candidate;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_phi_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_phi_candidate_energy;
+  std::vector<dqm::reco::MonitorElement*> h_num_fake_neut_phi_candidate_tot;
 
   std::vector<dqm::reco::MonitorElement*> h_chg_tracksters_in_candidate;
   std::vector<dqm::reco::MonitorElement*> h_chg_candidate_regressed_energy;
@@ -100,6 +115,23 @@ struct TICLCandidateValidatorHistograms {
   std::vector<dqm::reco::MonitorElement*> h_neut_candidate_charge;
   std::vector<dqm::reco::MonitorElement*> h_neut_candidate_pdgId;
   std::vector<dqm::reco::MonitorElement*> h_neut_candidate_partType;
+
+  std::vector<dqm::reco::MonitorElement*> h_neut_energy_noTrackster;
+  std::vector<dqm::reco::MonitorElement*> h_neut_pt_noTrackster;
+  std::vector<dqm::reco::MonitorElement*> h_neut_eta_noTrackster;
+  std::vector<dqm::reco::MonitorElement*> h_neut_phi_noTrackster;
+  std::vector<dqm::reco::MonitorElement*> h_chg_energy_noTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_pt_noTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_eta_noTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_phi_noTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_energy_noGoodTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_pt_noGoodTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_eta_noGoodTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_phi_noGoodTrack;
+  std::vector<dqm::reco::MonitorElement*> h_chg_energy_noTrackster;
+  std::vector<dqm::reco::MonitorElement*> h_chg_pt_noTrackster;
+  std::vector<dqm::reco::MonitorElement*> h_chg_eta_noTrackster;
+  std::vector<dqm::reco::MonitorElement*> h_chg_phi_noTrackster;
 };
 
 class TICLCandidateValidator {
@@ -107,14 +139,13 @@ public:
   typedef dqm::legacy::DQMStore DQMStore;
   typedef dqm::legacy::MonitorElement MonitorElement;
 
-  TICLCandidateValidator(){};
+  TICLCandidateValidator() {};
   TICLCandidateValidator(edm::EDGetTokenT<std::vector<TICLCandidate>> TICLCandidates,
                          edm::EDGetTokenT<std::vector<TICLCandidate>> simTICLCandidatesToken,
                          edm::EDGetTokenT<std::vector<reco::Track>> recoTracksToken,
                          edm::EDGetTokenT<std::vector<ticl::Trackster>> trackstersToken,
-                         edm::EDGetTokenT<ticl::RecoToSimCollectionSimTracksters> associatorMapRtSToken,
-                         edm::EDGetTokenT<ticl::SimToRecoCollectionSimTracksters> associatorMapStRToken,
-                         edm::EDGetTokenT<ticl::RecoToSimCollectionSimTracksters> associatorMapRtSPUToken,
+                         edm::EDGetTokenT<ticl::TracksterToTracksterMap> associatorMapRtSToken,
+                         edm::EDGetTokenT<ticl::TracksterToTracksterMap> associatorMapStRToken,
                          bool isTICLv5);
   ~TICLCandidateValidator();
 
@@ -124,16 +155,16 @@ public:
 
   void fillCandidateHistos(const edm::Event& event,
                            const Histograms& histograms,
-                           edm::Handle<ticl::TracksterCollection> simTrackstersCP_h) const;
+                           edm::Handle<ticl::TracksterCollection> simTrackstersCP_h,
+                           const StringCutObjectSelector<reco::Track> cutTk) const;
 
 private:
   edm::EDGetTokenT<std::vector<TICLCandidate>> TICLCandidatesToken_;
   edm::EDGetTokenT<std::vector<TICLCandidate>> simTICLCandidatesToken_;
   edm::EDGetTokenT<std::vector<reco::Track>> recoTracksToken_;
   edm::EDGetTokenT<std::vector<ticl::Trackster>> trackstersToken_;
-  edm::EDGetTokenT<ticl::RecoToSimCollectionSimTracksters> associatorMapRtSToken_;
-  edm::EDGetTokenT<ticl::SimToRecoCollectionSimTracksters> associatorMapStRToken_;
-  edm::EDGetTokenT<ticl::RecoToSimCollectionSimTracksters> associatorMapRtSPUToken_;
+  edm::EDGetTokenT<ticl::TracksterToTracksterMap> associatorMapRtSToken_;
+  edm::EDGetTokenT<ticl::TracksterToTracksterMap> associatorMapStRToken_;
   bool isTICLv5_ = false;
 };
 

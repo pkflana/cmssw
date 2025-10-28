@@ -2,19 +2,20 @@
 #include "FWCore/Framework/interface/SourceFactory.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/ESProducer.h"
-#include "FWCore/Framework/interface/EventSetupRecordIntervalFinder.h"
 #include "FWCore/Framework/interface/ESProducts.h"
+#include "FWCore/Framework/interface/EventSetupRecordIntervalFinder.h"
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/do_nothing_deleter.h"
 #include "CondFormats/DataRecord/interface/HGCalElectronicsMappingRcd.h"
 #include "CondFormats/HGCalObjects/interface/HGCalMappingModuleIndexer.h"
 #include "CondFormats/HGCalObjects/interface/HGCalMappingCellIndexer.h"
-#include "CondFormats/HGCalObjects/interface/HGCalMappingParameterHostCollection.h"
+#include "CondFormats/HGCalObjects/interface/HGCalMappingParameterHost.h"
 #include "DataFormats/HGCalDigi/interface/HGCalElectronicsId.h"
 #include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
 #include "DataFormats/ForwardDetId/interface/HGCScintillatorDetId.h"
 #include "Geometry/HGCalMapping/interface/HGCalMappingTools.h"
+#include <regex>  // regular expression
 
 /**
    @short plugin parses the module/cell locator files to produce the indexer records
@@ -23,12 +24,9 @@ class HGCalMappingESProducer : public edm::ESProducer, public edm::EventSetupRec
 public:
   explicit HGCalMappingESProducer(const edm::ParameterSet& iConfig) {
     //parse the files and hold the list of entities in memory
-    for (auto v : {"modules", "si", "sipm"}) {
-      edm::FileInPath fip = iConfig.getParameter<edm::FileInPath>(v);
-      hgcal::mappingtools::HGCalEntityList pmap;
-      pmap.buildFrom(fip.fullPath());
-      parsedMaps_[v] = pmap;
-    }
+    modulesMap_.buildFrom(iConfig.getParameter<edm::FileInPath>("modules").fullPath());
+    sicellsMap_.buildFrom(iConfig.getParameter<edm::FileInPath>("si").fullPath());
+    sipmCellsMap_.buildFrom(iConfig.getParameter<edm::FileInPath>("sipm").fullPath());
 
     setWhatProduced(this, &HGCalMappingESProducer::produceCellMapIndexer);
     setWhatProduced(this, &HGCalMappingESProducer::produceModuleMapIndexer);
@@ -66,18 +64,18 @@ private:
   void prepareCellMapperIndexer();
   void prepareModuleMapperIndexer();
 
-  std::map<std::string, hgcal::mappingtools::HGCalEntityList> parsedMaps_;
+  hgcal::mappingtools::HGCalEntityList modulesMap_, sicellsMap_, sipmCellsMap_;
   HGCalMappingCellIndexer cellIndexer_;
   HGCalMappingModuleIndexer modIndexer_;
 };
 
 //
 void HGCalMappingESProducer::prepareCellMapperIndexer() {
-  for (auto v : {"si", "sipm"}) {
-    auto& pmap = parsedMaps_[v];
+  for (size_t i = 0; i < 2; i++) {
+    const auto& pmap = i == 0 ? sicellsMap_ : sipmCellsMap_;
     const auto& entities = pmap.getEntries();
-    for (auto row : entities) {
-      std::string typecode = pmap.getAttr("Typecode", row);
+    for (const auto& row : entities) {
+      const std::string& typecode = pmap.getAttr("Typecode", row);
       int chip = pmap.getIntAttr("ROC", row);
       int half = pmap.getIntAttr("HalfROC", row);
       cellIndexer_.processNewCell(typecode, chip, half);
@@ -99,35 +97,39 @@ void HGCalMappingESProducer::prepareModuleMapperIndexer() {
   auto defaultTypeNWords = cellIndexer_.getNWordsExpectedFor(defaultTypeCodeIdx);
   auto nwords = defaultTypeNWords;
 
-  auto& pmap = parsedMaps_["modules"];
-  auto& entities = pmap.getEntries();
-  for (auto row : entities) {
-    std::string typecode = pmap.getAttr("typecode", row);
+  const auto& entities = modulesMap_.getEntries();
+  for (const auto& row : entities) {
+    const std::string& typecode = modulesMap_.getAttr("typecode", row);  // module type code
+    std::string wtypecode;                                               // wafer type code
 
-    if (typecode.find('M') == 0 && typecode.size() > 4)
-      typecode = typecode.substr(0, 4);
-
-    try {
-      typecodeidx = cellIndexer_.getEnumFromTypecode(typecode);
-      nwords = cellIndexer_.getNWordsExpectedFor(typecode);
-      nerx = cellIndexer_.getNErxExpectedFor(typecode);
-    } catch (cms::Exception& e) {
-      int plane = pmap.getIntAttr("plane", row);
-      int u = pmap.getIntAttr("u", row);
-      int v = pmap.getIntAttr("v", row);
-      edm::LogWarning("HGCalMappingESProducer") << "Exception caught decoding index for typecode=" << typecode
-                                                << " @ plane=" << plane << " u=" << u << " v=" << v << "\n"
-                                                << e.what() << "\n"
-                                                << "===> will assign default (MH-F) which may be inefficient";
-      typecodeidx = defaultTypeCodeIdx;
-      nwords = defaultTypeNWords;
-      nerx = defaultNerx;
+    // match module type code to regular expression pattern (MM-TTTT-LL-NNNN)
+    // see https://edms.cern.ch/ui/#!master/navigator/document?D:101059405:101148061:subDocs
+    //const std::regex typecode_regex("([MX])([LH])-([FTBLR5])([123])([WPC])-([A-Z]{2})-([0-9]{3,4})"); // MM-TTTT-LL-NNNN
+    const std::regex typecode_regex("(([MX])([LH])-([FTBLR5])).*");  // MM-T*
+    std::smatch typecode_match;                                      // match object for string objects
+    bool matched = std::regex_match(typecode, typecode_match, typecode_regex);
+    if (matched) {
+      wtypecode = typecode_match[1].str();  // wafer type following MM-T pattern, e.g. "MH-F"
+    } else {
+      const std::regex sipm_typecode_regex(R"(T[LH]-L\d{2}S\d)");
+      std::smatch sipm_typecode_match;  // match object for string objects
+      matched = std::regex_match(typecode, sipm_typecode_match, sipm_typecode_regex);
+      if (matched) {
+        wtypecode = sipm_typecode_match[0].str();  // assign sipm typecode as wafer type
+      } else {
+        throw cms::Exception("HGCalMappingIndexESSource")
+            << "Could not match module type code to expected pattern: " << typecode;
+      }
     }
 
-    int fedid = pmap.getIntAttr("fedid", row);
-    int captureblockidx = pmap.getIntAttr("captureblockidx", row);
-    int econdidx = pmap.getIntAttr("econdidx", row);
-    modIndexer_.processNewModule(fedid, captureblockidx, econdidx, typecodeidx, nerx, nwords);
+    typecodeidx = cellIndexer_.getEnumFromTypecode(wtypecode);
+    nwords = cellIndexer_.getNWordsExpectedFor(wtypecode);
+    nerx = cellIndexer_.getNErxExpectedFor(wtypecode);
+
+    int fedid = modulesMap_.getIntAttr("fedid", row);
+    int captureblockidx = modulesMap_.getIntAttr("captureblockidx", row);
+    int econdidx = modulesMap_.getIntAttr("econdidx", row);
+    modIndexer_.processNewModule(fedid, captureblockidx, econdidx, typecodeidx, nerx, nwords, typecode);
   }
 
   modIndexer_.finalize();

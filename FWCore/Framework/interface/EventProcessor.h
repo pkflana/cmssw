@@ -8,6 +8,16 @@ configured in the user's main() function, and is set running.
 
 ----------------------------------------------------------------------*/
 
+#include <atomic>
+#include <exception>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
+
+#include "oneapi/tbb/task_group.h"
+
 #include "DataFormats/Provenance/interface/ProcessHistoryID.h"
 #include "DataFormats/Provenance/interface/RunID.h"
 #include "DataFormats/Provenance/interface/LuminosityBlockID.h"
@@ -16,10 +26,9 @@ configured in the user's main() function, and is set running.
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/InputSource.h"
 #include "FWCore/Framework/interface/MergeableRunProductProcesses.h"
-#include "FWCore/Framework/interface/PathsAndConsumesOfModules.h"
 #include "FWCore/Framework/interface/SharedResourcesAcquirer.h"
 #include "FWCore/Framework/interface/PrincipalCache.h"
-#include "FWCore/Framework/interface/SignallingProductRegistry.h"
+#include "FWCore/Framework/interface/SignallingProductRegistryFiller.h"
 #include "FWCore/Framework/interface/PreallocationConfiguration.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -35,17 +44,9 @@ configured in the user's main() function, and is set running.
 #include "FWCore/Utilities/interface/get_underlying_safe.h"
 #include "FWCore/Utilities/interface/propagate_const.h"
 
-#include <atomic>
-#include <map>
-#include <memory>
-#include <set>
-#include <string>
-#include <vector>
-#include <exception>
-#include <mutex>
-
 namespace edm {
 
+  class ExceptionCollector;
   class ExceptionToActionTable;
   class BranchIDListHelper;
   class MergeableRunProductMetadata;
@@ -53,7 +54,6 @@ namespace edm {
   class EDLooperBase;
   class HistoryAppender;
   class ProcessDesc;
-  class SubProcess;
   class WaitingTaskHolder;
   class LuminosityBlockPrincipal;
   class LuminosityBlockProcessingStatus;
@@ -119,6 +119,10 @@ namespace edm {
        the first time 'run' is called
        */
     void beginJob();
+
+    void beginStreams();
+
+    void endStreams(ExceptionCollector&) noexcept;
 
     /**This should be called before the EventProcessor is destroyed
        throws if any module's endJob throws an exception.
@@ -275,7 +279,6 @@ namespace edm {
     void processEventWithLooper(EventPrincipal&, unsigned int iStreamIndex);
 
     std::shared_ptr<ProductRegistry const> preg() const { return get_underlying_safe(preg_); }
-    std::shared_ptr<ProductRegistry>& preg() { return get_underlying_safe(preg_); }
     std::shared_ptr<BranchIDListHelper const> branchIDListHelper() const {
       return get_underlying_safe(branchIDListHelper_);
     }
@@ -320,7 +323,6 @@ namespace edm {
     std::unique_ptr<ExceptionToActionTable const> act_table_;
     std::shared_ptr<ProcessConfiguration const> processConfiguration_;
     ProcessContext processContext_;
-    PathsAndConsumesOfModules pathsAndConsumesOfModules_;
     MergeableRunProductProcesses mergeableRunProductProcesses_;
     edm::propagate_const<std::unique_ptr<Schedule>> schedule_;
     std::vector<edm::SerialTaskQueue> streamQueues_;
@@ -337,7 +339,6 @@ namespace edm {
     std::multimap<std::string, std::string> referencesToBranches_;
     std::vector<std::string> modulesToIgnoreForDeleteEarly_;
 
-    std::vector<SubProcess> subProcesses_;
     edm::propagate_const<std::unique_ptr<HistoryAppender>> historyAppender_;
 
     edm::propagate_const<std::shared_ptr<FileBlock>> fb_;
@@ -351,6 +352,8 @@ namespace edm {
     std::shared_ptr<std::recursive_mutex> sourceMutex_;
     PrincipalCache principalCache_;
     bool beginJobCalled_;
+    bool beginJobStartedModules_ = false;
+    bool beginJobSucceeded_ = false;
     bool shouldWeStop_;
     bool fileModeNoMerge_;
     std::string exceptionMessageFiles_;
@@ -363,10 +366,6 @@ namespace edm {
     PreallocationConfiguration preallocations_;
 
     bool firstEventInBlock_ = true;
-
-    typedef std::set<std::pair<std::string, std::string>> ExcludedData;
-    typedef std::map<std::string, ExcludedData> ExcludedDataMap;
-    ExcludedDataMap eventSetupDataToExcludeFromPrefetching_;
 
     bool printDependencies_ = false;
     bool deleteNonConsumedUnscheduledModules_ = true;

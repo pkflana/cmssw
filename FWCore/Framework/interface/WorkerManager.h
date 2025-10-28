@@ -5,22 +5,21 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/UnscheduledCallProducer.h"
 #include "FWCore/Framework/interface/WorkerRegistry.h"
+#include "FWCore/ServiceRegistry/interface/ParentContext.h"
 #include "FWCore/ServiceRegistry/interface/ServiceRegistryfwd.h"
 #include "FWCore/Concurrency/interface/WaitingTaskHolder.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace edm {
-  class ExceptionCollector;
   class ExceptionToActionTable;
   class ModuleRegistry;
-  class ModuleTypeResolverMaker;
-  class PreallocationConfiguration;
   class Worker;
   namespace eventsetup {
     class ESRecordsToProductResolverIndices;
@@ -30,9 +29,6 @@ namespace edm {
   public:
     typedef std::vector<Worker*> AllWorkers;
 
-    WorkerManager(std::shared_ptr<ActivityRegistry> actReg,
-                  ExceptionToActionTable const& actions,
-                  ModuleTypeResolverMaker const* typeResolverMaker);
     WorkerManager(WorkerManager&&) = default;
 
     WorkerManager(std::shared_ptr<ModuleRegistry> modReg,
@@ -41,13 +37,7 @@ namespace edm {
 
     void deleteModuleIfExists(std::string const& moduleLabel);
 
-    void addToUnscheduledWorkers(ParameterSet& pset,
-                                 ProductRegistry& preg,
-                                 PreallocationConfiguration const* prealloc,
-                                 std::shared_ptr<ProcessConfiguration const> processConfiguration,
-                                 std::string label,
-                                 std::set<std::string>& unscheduledLabels,
-                                 std::vector<std::string>& shouldBeUsedLabels);
+    void addToUnscheduledWorkers(ModuleDescription const& iDescription);
 
     template <typename T, typename U>
     void processOneOccurrenceAsync(WaitingTaskHolder,
@@ -68,15 +58,6 @@ namespace edm {
     void setupResolvers(Principal& principal);
     void setupOnDemandSystem(EventTransitionInfo const&);
 
-    void beginJob(ProductRegistry const& iRegistry,
-                  eventsetup::ESRecordsToProductResolverIndices const&,
-                  ProcessBlockHelperBase const&);
-    void endJob();
-    void endJob(ExceptionCollector& collector);
-
-    void beginStream(StreamID iID, StreamContext& streamContext);
-    void endStream(StreamID iID, StreamContext& streamContext);
-
     AllWorkers const& allWorkers() const { return allWorkers_; }
     AllWorkers const& unscheduledWorkers() const { return unscheduled_.workers(); }
 
@@ -84,15 +65,27 @@ namespace edm {
 
     ExceptionToActionTable const& actionTable() const { return *actionTable_; }
 
-    Worker* getWorker(ParameterSet& pset,
-                      ProductRegistry& preg,
-                      PreallocationConfiguration const* prealloc,
-                      std::shared_ptr<ProcessConfiguration const> processConfiguration,
-                      std::string const& label);
+    template <typename T>
+      requires requires(T const& x) { x.moduleDescription(); }
+    Worker* getWorkerForModule(T const& module) {
+      auto* worker = getWorkerForExistingModule(module.moduleDescription().moduleLabel());
+      assert(worker != nullptr);
+      assert(worker->matchesBaseClassPointer(static_cast<typename T::ModuleType const*>(&module)));
+      return worker;
+    }
+
+    Worker* getWorkerForModule(edm::ModuleDescription const& iDescription) {
+      auto* worker = getWorkerForExistingModule(iDescription.moduleLabel());
+      assert(worker != nullptr);
+      assert(worker->description() == &iDescription);
+      return worker;
+    }
 
     void resetAll();
 
   private:
+    Worker* getWorkerForExistingModule(std::string const& label);
+
     WorkerRegistry workerReg_;
     ExceptionToActionTable const* actionTable_;
     AllWorkers allWorkers_;

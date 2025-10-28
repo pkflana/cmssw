@@ -41,7 +41,7 @@ namespace {
   }
 
   template <typename T>
-  static void overrideFromPSet(char const *iName, edm::ParameterSet const &iPSet, T &iHolder, T const *&iPointer) {
+  void overrideFromPSet(char const *iName, edm::ParameterSet const &iPSet, T &iHolder, T const *&iPointer) {
     if (iPSet.exists(iName)) {
       iHolder = iPSet.getUntrackedParameter<T>(iName);
       iPointer = &iHolder;
@@ -75,10 +75,8 @@ namespace edm {
 
     SiteLocalConfigService::SiteLocalConfigService(ParameterSet const &pset)
         : m_url(pset.getUntrackedParameter<std::string>("siteLocalConfigFileUrl", defaultURL())),
-          m_trivialDataCatalogs(),
           m_dataCatalogs(),
           m_frontierConnect(),
-          m_rfioType("castor"),
           m_connected(false),
           m_cacheTempDir(),
           m_cacheTempDirPtr(nullptr),
@@ -151,22 +149,6 @@ namespace edm {
       }
     }
 
-    std::vector<std::string> const &SiteLocalConfigService::trivialDataCatalogs() const {
-      if (!m_connected) {
-        static std::vector<std::string> const tmp{"file:PoolFileCatalog.xml"};
-        return tmp;
-      }
-
-      if (m_trivialDataCatalogs.empty()) {
-        cms::Exception ex("SiteLocalConfigService");
-        ex << "Did not find catalogs in event-data section in " << m_url;
-        ex.addContext("edm::SiteLocalConfigService::trivialDataCatalogs()");
-        throw ex;
-      }
-
-      return m_trivialDataCatalogs;
-    }
-
     std::vector<edm::CatalogAttributes> const &SiteLocalConfigService::dataCatalogs() const {
       if (!m_connected) {
         cms::Exception ex("SiteLocalConfigService");
@@ -185,7 +167,11 @@ namespace edm {
 
     std::filesystem::path const SiteLocalConfigService::storageDescriptionPath(
         edm::CatalogAttributes const &aDataCatalog) const {
-      std::string siteconfig_path = std::string(std::getenv("SITECONFIG_PATH"));
+      char *tmp = std::getenv("SITECONFIG_PATH");
+      if (tmp == nullptr) {
+        throw cms::Exception("SiteLocalConfigService") << "SITECONFIG_PATH is not set!";
+      }
+      std::string siteconfig_path = std::string(tmp);
       std::filesystem::path filename_storage;
       //not a cross site use local path given in SITECONFIG_PATH
       if (aDataCatalog.site == aDataCatalog.storageSite) {
@@ -284,8 +270,6 @@ namespace edm {
       return input;
     }
 
-    std::string const SiteLocalConfigService::rfioType(void) const { return m_rfioType; }
-
     std::string const *SiteLocalConfigService::sourceCacheTempDir() const { return m_cacheTempDirPtr; }
 
     double const *SiteLocalConfigService::sourceCacheMinFree() const { return m_cacheMinFreePtr; }
@@ -349,12 +333,11 @@ namespace edm {
       // <site-local-config>
       // <site name="FNAL">
       //   <subsite name="FNAL_SUBSITE"/>
-      //   <event-data>
-      //     <catalog url="trivialcatalog_file:/x/y/z.xml"/>
-      //     <rfiotype value="castor"/>
-      //   </event-data>
+      //   <data-access>
+      //     <catalog volume="..." protocol="..."/>
+      //     <catalog site="..." volume="..." protocol="..."/>
+      //   </data-access>
       //   <calib-data>
-      //     <catalog url="trivialcatalog_file:/x/y/z.xml"/>
       //     <frontier-connect>
       //       ... frontier-interpreted server/proxy xml ...
       //     </frontier-connect>
@@ -394,24 +377,6 @@ namespace edm {
             throw ex;
           }
           m_subSiteName = safe(subSite->Attribute("name"));
-        }
-
-        // Parsing of the event data section
-        auto eventData = site->FirstChildElement("event-data");
-        if (eventData) {
-          auto catalog = eventData->FirstChildElement("catalog");
-          if (catalog) {
-            m_trivialDataCatalogs.push_back(safe(catalog->Attribute("url")));
-            catalog = catalog->NextSiblingElement("catalog");
-            while (catalog) {
-              m_trivialDataCatalogs.push_back(safe(catalog->Attribute("url")));
-              catalog = catalog->NextSiblingElement("catalog");
-            }
-          }
-          auto rfiotype = eventData->FirstChildElement("rfiotype");
-          if (rfiotype) {
-            m_rfioType = safe(rfiotype->Attribute("value"));
-          }
         }
 
         //data-access
@@ -580,10 +545,12 @@ namespace edm {
               "Specify the file containing the site local config. Empty string will load from default directory.");
       desc.addOptionalUntracked<std::string>("overrideSourceCacheTempDir");
       desc.addOptionalUntracked<double>("overrideSourceCacheMinFree");
-      desc.addOptionalUntracked<std::string>("overrideSourceCacheHintDir");
+      desc.addOptionalUntracked<std::string>("overrideSourceCacheHintDir")
+          ->setComment("Set cache hint. See AdaptorConfig plugin for valid values.");
       desc.addOptionalUntracked<std::string>("overrideSourceCloneCacheHintDir")
           ->setComment("Provide an alternate cache hint for fast cloning.");
-      desc.addOptionalUntracked<std::string>("overrideSourceReadHint");
+      desc.addOptionalUntracked<std::string>("overrideSourceReadHint")
+          ->setComment("Set read hint. See AdaptorConfig plugin for valid values.");
       desc.addOptionalUntracked<std::vector<std::string> >("overrideSourceNativeProtocols");
       desc.addOptionalUntracked<unsigned int>("overrideSourceTTreeCacheSize");
       desc.addOptionalUntracked<unsigned int>("overrideSourceTimeout");

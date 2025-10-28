@@ -53,7 +53,7 @@ using namespace ticl;
 class TrackstersMergeProducer : public edm::stream::EDProducer<> {
 public:
   explicit TrackstersMergeProducer(const edm::ParameterSet &ps);
-  ~TrackstersMergeProducer() override{};
+  ~TrackstersMergeProducer() override {}
   void produce(edm::Event &, const edm::EventSetup &) override;
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
 
@@ -198,7 +198,7 @@ TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps)
 
 void TrackstersMergeProducer::beginJob() {}
 
-void TrackstersMergeProducer::endJob(){};
+void TrackstersMergeProducer::endJob() {}
 
 void TrackstersMergeProducer::beginRun(edm::Run const &iEvent, edm::EventSetup const &es) {
   edm::ESHandle<HGCalDDDConstants> hdc = es.getHandle(hdc_token_);
@@ -309,7 +309,7 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
 
     // Merge included tracksters
     ticl::Trackster outTrackster;
-    outTrackster.setTrackIdx(track_idx);
+    outTrackster.addTrackIdx(track_idx);
     auto updated_size = 0;
     for (const auto &ts_ptr : trackster_ptrs) {
 #ifdef EDM_ML_DEBUG
@@ -361,7 +361,8 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   assignPCAtoTracksters(*resultTrackstersMerged,
                         layerClusters,
                         layerClustersTimes,
-                        rhtools_.getPositionLayer(rhtools_.lastLayerEE()).z());
+                        rhtools_.getPositionLayer(rhtools_.lastLayerEE()).z(),
+                        rhtools_);
   energyRegressionAndID(layerClusters, tfSession_, *resultTrackstersMerged);
 
   //filling the TICLCandidates information

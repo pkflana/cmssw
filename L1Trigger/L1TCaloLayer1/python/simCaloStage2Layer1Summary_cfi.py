@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 from L1Trigger.L1TCaloLayer1.CICADATestPatterns import standardCICADATestPatterns
+from Configuration.Eras.Modifier_stage2L1Trigger_2025_cff import stage2L1Trigger_2025
 
 simCaloStage2Layer1Summary = cms.EDProducer('L1TCaloSummary_CICADA_vXp1p2',
     nPumBins = cms.uint32(18),
@@ -52,5 +53,12 @@ simCaloStage2Layer1Summary = cms.EDProducer('L1TCaloSummary_CICADA_vXp1p2',
     firmwareVersion = cms.int32(1),
     CICADAModelVersion = cms.string("CICADAModel_v2p1p2"),
     useTestPatterns = cms.bool(False),
-    testPatterns = standardCICADATestPatterns
+    testPatterns = standardCICADATestPatterns,
+    caloLayer1Regions = cms.InputTag("simCaloStage2Layer1Digis", ""),
+    backupRegionToken = cms.InputTag("simCaloStage2Layer1Digis", "")
+)
+
+stage2L1Trigger_2025.toModify(
+    simCaloStage2Layer1Summary,
+    CICADAModelVersion = cms.string('CICADAModel_v2p2p0')
 )

@@ -20,7 +20,9 @@
 #include "RecoTracker/MkFitCore/standalone/RntDumper/MkFinder_selectHitIndices.icc"
 #endif
 
-#include "vdt/atan2.h"
+#include <vdt/atan2.h>
+#include <vdt/sin.h>
+#include <vdt/tan.h>
 
 #include <algorithm>
 #include <queue>
@@ -237,8 +239,8 @@ namespace mkfit {
     }
   }
 
-  void MkFinder::packModuleNormDir(
-      const LayerOfHits &layer_of_hits, int hit_cnt, MPlexHV &norm, MPlexHV &dir, int N_proc) const {
+  void MkFinder::packModuleNormDirPnt(
+      const LayerOfHits &layer_of_hits, int hit_cnt, MPlexHV &norm, MPlexHV &dir, MPlexHV &pnt, int N_proc) const {
     for (int itrack = 0; itrack < NN; ++itrack) {
       if (itrack < N_proc && hit_cnt < m_XHitSize[itrack]) {
         const auto &hit = layer_of_hits.refHit(m_XHitArr.constAt(itrack, hit_cnt, 0));
@@ -250,6 +252,10 @@ namespace mkfit {
         dir.At(itrack, 0, 0) = mi.xdir[0];
         dir.At(itrack, 1, 0) = mi.xdir[1];
         dir.At(itrack, 2, 0) = mi.xdir[2];
+        pnt.At(itrack, 0, 0) = mi.pos[0];
+        pnt.At(itrack, 1, 0) = mi.pos[1];
+        pnt.At(itrack, 2, 0) = mi.pos[2];
+        //std::cout << "packModuleNormDirPnt id=" << hit_cnt << " norm=(" << mi.zdir[0] << ", " << mi.zdir[1] << ", " << mi.zdir[2] << ") - dir=(" << mi.xdir[0] << ", " << mi.xdir[1] << ", " << mi.xdir[2] << ") -  pnt=(" << mi.pos[0] << ", " << mi.pos[1] << ", " << mi.pos[2] << ")" << std::endl;
       }
     }
   }
@@ -403,15 +409,15 @@ namespace mkfit {
 
         const float z = m_Par[iI].constAt(itrack, 2, 0);
         const float dz = std::abs(nSigmaZ * std::sqrt(m_Err[iI].constAt(itrack, 2, 2)));
-        const float edgeCorr =
-            std::abs(0.5f * (L.layer_info().rout() - L.layer_info().rin()) / std::tan(m_Par[iI].constAt(itrack, 5, 0)));
+        const float edgeCorr = std::abs(0.5f * (L.layer_info().rout() - L.layer_info().rin()) /
+                                        vdt::fast_tanf(m_Par[iI].constAt(itrack, 5, 0)));
         // XXX-NUM-ERR above, m_Err(2,2) gets negative!
 
         m_XWsrResult[itrack] = L.is_within_z_sensitive_region(z, std::sqrt(dz * dz + edgeCorr * edgeCorr));
         assignbins(itrack, z, dz, phi, dphi, min_dq, max_dq, min_dphi, max_dphi);
 
         // Relax propagation-fail detection to be in line with pre-43145.
-        if (m_FailFlag[itrack] && std::sqrt(r2) >= L.layer_info().rin()) {
+        if (m_FailFlag[itrack] && r2 >= sqr(L.layer_info().rin())) {
           m_FailFlag[itrack] = 0;
         }
       }
@@ -442,11 +448,10 @@ namespace mkfit {
         const float r2Inv = 1.f / r2;
         const float dphidx = -y * r2Inv, dphidy = x * r2Inv;
         const float phi = getPhi(x, y);
-        const float dphi2 =
-            calcdphi2(itrack, dphidx, dphidy)
-            //range from finite layer thickness
-            + std::pow(layerD * std::tan(m_Par[iI].At(itrack, 5, 0)) * std::sin(m_Par[iI].At(itrack, 4, 0) - phi), 2) *
-                  r2Inv;
+        const float tanT = vdt::fast_tanf(m_Par[iI].At(itrack, 5, 0));
+        const float dphi2 = calcdphi2(itrack, dphidx, dphidy)
+                            //range from finite layer thickness
+                            + std::pow(layerD * tanT * vdt::fast_sinf(m_Par[iI].At(itrack, 4, 0) - phi), 2) * r2Inv;
 #ifdef HARD_CHECK
         assert(dphi2 >= 0);
 #endif
@@ -458,8 +463,7 @@ namespace mkfit {
                                                       y * y * m_Err[iI].constAt(itrack, 1, 1) +
                                                       2 * x * y * m_Err[iI].constAt(itrack, 0, 1)) /
                                              r2);
-        const float edgeCorr = std::abs(0.5f * (L.layer_info().zmax() - L.layer_info().zmin()) *
-                                        std::tan(m_Par[iI].constAt(itrack, 5, 0)));
+        const float edgeCorr = std::abs(0.5f * (L.layer_info().zmax() - L.layer_info().zmin()) * tanT);
 
         m_XWsrResult[itrack] = L.is_within_r_sensitive_region(r, std::sqrt(dr * dr + edgeCorr * edgeCorr));
         assignbins(itrack, r, dr, phi, dphi, min_dq, max_dq, min_dphi, max_dphi);
@@ -566,8 +570,8 @@ namespace mkfit {
               const float ddphi = cdist(std::abs(phi - L.hit_phi(hi)));
 
               // clang-format off
-              dprintf("     SHI %3u %4u %5u  %6.3f %6.3f %6.4f %7.5f   %s\n",
-                      qi, pi, hi, L.hit_q(hi), L.hit_phi(hi),
+              dprintf("     SHI[%4u] %3u %4u %5u  %6.3f %6.3f %6.4f %7.5f   %s\n",
+                      hi_orig, qi, pi, hi, L.hit_q(hi), L.hit_phi(hi),
                       ddq, ddphi, (ddq < dq && ddphi < dphi) ? "PASS" : "FAIL");
               // clang-format on
 
@@ -623,8 +627,8 @@ namespace mkfit {
                 float hx = thishit.x();
                 float hy = thishit.y();
                 float hz = thishit.z();
-                float hr = std::hypot(hx, hy);
-                float hphi = std::atan2(hy, hx);
+                float hr = hipo(hx, hy);
+                float hphi = vdt::fast_atan2f(hy, hx);
                 float hex = ngr( std::sqrt(thishit.exx()) );
                 float hey = ngr( std::sqrt(thishit.eyy()) );
                 float hez = ngr( std::sqrt(thishit.ezz()) );
@@ -636,7 +640,7 @@ namespace mkfit {
                 float tx = m_Par[iI].At(itrack, 0, 0);
                 float ty = m_Par[iI].At(itrack, 1, 0);
                 float tz = m_Par[iI].At(itrack, 2, 0);
-                float tr = std::hypot(tx, ty);
+                float tr = hipo(tx, ty);
                 float tphi = std::atan2(ty, tx);
                 // float tchi2 = ngr( m_Chi2(itrack, 0, 0) ); // unused
                 float tex = ngr( std::sqrt(m_Err[iI].At(itrack, 0, 0)) );
@@ -648,7 +652,7 @@ namespace mkfit {
                 float tephi = ngr( std::sqrt(
                     (ty * ty * tex * tex + tx * tx * tey * tey - 2.0f * tx * ty * m_Err[iI].At(itrack, 0, 1)) /
                     (tr * tr * tr * tr)) );
-                float ht_dxy = std::hypot(hx - tx, hy - ty);
+                float ht_dxy = hipo(hx - tx, hy - ty);
                 float ht_dz = hz - tz;
                 float ht_dphi = cdist(std::abs(hphi - tphi));
 
@@ -744,9 +748,9 @@ namespace mkfit {
               }
             }
           }  //hi
-        }    //pi
-      }      //qi
-    }        //itrack
+        }  //pi
+      }  //qi
+    }  //itrack
   }
 
   //==============================================================================
@@ -775,8 +779,7 @@ namespace mkfit {
       if (m_FailFlag[i]) {
         rnt_shi.RegisterFailedProp(i, m_Par[1 - iI], m_Par[iI], m_event, m_SeedOriginIdx[i]);
       } else if (sim_lbls[i].is_set()) {
-        CandInfo &ci = rnt_shi.RegisterGoodProp(i, m_Par[iI], m_event, m_SeedOriginIdx[i]);
-        ci.ic2list.reset();  // zero initialize
+        /* CandInfo &ci = */ rnt_shi.RegisterGoodProp(i, m_Par[iI], m_event, m_SeedOriginIdx[i]);
       }  // else ... could do something about the bad seeds ... probably better to collect elsewhere.
     }
     // Get BinSearch result from V1. Note -- it can clear m_FailFlag for some cands!
@@ -963,8 +966,8 @@ namespace mkfit {
 
       // clang-format off
       dprintf("  %2d/%2d: %6.3f %6.3f %6.6f %7.5f %3u %3u %4u %4u\n",
-              L.layer_id(), itrack, B.q_c[itrack], B.phi_c[itrack],
-              B.qmax[itrack] - B.qmin[itrack], B.dphi[itrack],
+              L.layer_id(), itrack, B.m_q_center[itrack], B.m_phi_center[itrack],
+              B.m_q_max[itrack] - B.m_q_min[itrack], B.m_phi_delta[itrack],
               qb1, qb2, pb1, pb2);
 #ifdef RNT_DUMP_MkF_SelHitIdcs
       int hit_out_idx = 0;
@@ -981,8 +984,8 @@ namespace mkfit {
         for (bidx_t pi = pb1; pi != pb2; pi = L.phiMaskApply(pi + 1)) {
           // Limit to central Q-bin
           if (qi == qb && L.isBinDead(pi, qi) == true) {
-            dprint("dead module for track in layer=" << L.layer_id() << " qb=" << qi << " pi=" << pi
-                                                     << " q=" << B.q_c[itrack] << " phi=" << B.phi_c[itrack]);
+            dprint("dead module for track in layer=" << L.layer_id() << " qb=" << qi << " pi=" << pi << " q="
+                                                     << B.m_q_center[itrack] << " phi=" << B.m_phi_center[itrack]);
             m_XWsrResult[itrack].m_in_gap = true;
           }
 
@@ -1008,23 +1011,48 @@ namespace mkfit {
             bool prop_fail;
 
             if (L.is_barrel()) {
-              prop_fail = mp_is.propagate_to_r(mp::PA_Exact, L.hit_qbar(hi), mp_s, true);
-              new_q = mp_s.z;
+              const Hit &hit = L.refHit(hi_orig);
+              unsigned int mid = hit.detIDinLayer();
+              const ModuleInfo &mi = LI.module_info(mid);
+
+              // Original condition, for phase2
+              // if (L.layer_id() >= 4 && L.layer_id() <= 9 && std::abs(mp_is.z) > 10.f) {
+
+              // This could work well instead of prop-to-r, too. Limit to 0.05 rad, 2.85 deg.
+              if (std::abs(mi.zdir(2)) > 0.05f) {
+                prop_fail = mp_is.propagate_to_plane(mp::PA_Line, mi, mp_s, true);
+                new_q = mp_s.z;
+                /*
+                // This for calculating ddq on the dector plane, along the "strip" direction.
+                // NOTE -- should take full covariance and project it onto ydir.
+                SVector3 ydir = mi.calc_ydir();
+                new_ddq = (mp_s.x - mi.pos(0)) * ydir(0) +
+                          (mp_s.y - mi.pos(1)) * ydir(1) +
+                          (mp_s.z - mi.pos(2)) * ydir(2);
+                new_ddq = std::abs(new_ddq);
+                */
+                new_ddq = std::abs(new_q - L.hit_q(hi));
+                // dq from z direction is actually projected, so just take plain dz.
+
+              } else {
+                prop_fail = mp_is.propagate_to_r(mp::PA_Exact, L.hit_qbar(hi), mp_s, true);
+                new_q = mp_s.z;
+                new_ddq = std::abs(new_q - L.hit_q(hi));
+              }
             } else {
               prop_fail = mp_is.propagate_to_z(mp::PA_Exact, L.hit_qbar(hi), mp_s, true);
-              new_q = std::hypot(mp_s.x, mp_s.y);
+              new_q = hipo(mp_s.x, mp_s.y);
+              new_ddq = std::abs(new_q - L.hit_q(hi));
             }
 
             new_phi = vdt::fast_atan2f(mp_s.y, mp_s.x);
             new_ddphi = cdist(std::abs(new_phi - L.hit_phi(hi)));
-            new_ddq = std::abs(new_q - L.hit_q(hi));
-
             bool dqdphi_presel = new_ddq < B.dq_track[itrack] + DDQ_PRESEL_FAC * L.hit_q_half_length(hi) &&
                                  new_ddphi < B.dphi_track[itrack] + DDPHI_PRESEL_FAC * 0.0123f;
 
             // clang-format off
-            dprintf("     SHI %3u %4u %5u  %6.3f %6.3f %6.4f %7.5f  PROP-%s  %s\n",
-                    qi, pi, hi, L.hit_q(hi), L.hit_phi(hi),
+            dprintf("     SHI[%4u] %3u %4u %5u  %6.3f %6.3f %6.4f %7.5f  PROP-%s  %s\n",
+                    hi_orig, qi, pi, hi, L.hit_q(hi), L.hit_phi(hi),
                     new_ddq, new_ddphi, prop_fail ? "FAIL" : "OK", dqdphi_presel ? "PASS" : "REJECT");
 #ifdef RNT_DUMP_MkF_SelHitIdcs
             if (rnt_shi.f_h_remap[itrack] >= 0) {
@@ -1054,8 +1082,10 @@ namespace mkfit {
                   hit_lbl },
                 state2pos(mp_s), state2mom(mp_s),
                 new_ddq, new_ddphi, hchi2, (int) hi_orig,
-                (sim_lbl == hit_lbl), dqdphi_presel, !prop_fail
+                (sim_lbl == hit_lbl), dqdphi_presel, !prop_fail,
+                false, IdxChi2List()
               });
+              ci.hmi.back().ic2list.reset(); // zero initialize
 
               bool new_dec = dqdphi_presel && !prop_fail;
               ++ci.n_all_hits;
@@ -1081,8 +1111,8 @@ namespace mkfit {
               pqueue.push({new_ddphi, hi_orig});
             }
           }  //hi
-        }    //pi
-      }      //qi
+        }  //pi
+      }  //qi
 
       dprintf(" PQUEUE (%d)", pqueue_size);
 #ifdef RNT_DUMP_MkF_SelHitIdcs
@@ -1235,7 +1265,7 @@ namespace mkfit {
         }
 
         dprint("ADD FAKE HIT FOR TRACK #" << itrack << " withinBounds=" << (fake_hit_idx != Hit::kHitEdgeIdx)
-                                          << " r=" << std::hypot(m_Par[iP](itrack, 0, 0), m_Par[iP](itrack, 1, 0)));
+                                          << " r=" << hipo(m_Par[iP](itrack, 0, 0), m_Par[iP](itrack, 1, 0)));
 
         m_msErr.setDiagonal3x3(itrack, 666);
         m_msPar(itrack, 0, 0) = m_Par[iP](itrack, 0, 0);
@@ -1317,16 +1347,17 @@ namespace mkfit {
                              msErr.constAt(itrack, 1, 1) * hitT2inv};
       const bool detXY_OK =
           std::abs(proj[0] * proj[2] - proj[1] * proj[1]) < 0.1f;  //check that zero-direction is close
-      const float cosP = cos(pPar.constAt(itrack, 4, 0));
-      const float sinP = sin(pPar.constAt(itrack, 4, 0));
-      const float sinT = std::abs(sin(pPar.constAt(itrack, 5, 0)));
+      float sinP;
+      float cosP;
+      vdt::fast_sincosf(pPar.constAt(itrack, 4, 0), sinP, cosP);
+      const float sinT = std::abs(vdt::fast_sinf(pPar.constAt(itrack, 5, 0)));
       //qSF = sqrt[(px,py)*(1-proj)*(px,py)]/p = sinT*sqrt[(cosP,sinP)*(1-proj)*(cosP,sinP)].
       qSF = detXY_OK ? sinT * std::sqrt(std::abs(1.f + cosP * cosP * proj[0] + sinP * sinP * proj[2] -
                                                  2.f * cosP * sinP * proj[1]))
                      : 1.f;
     } else {  //project on z
       // p_zLocal/p = p_z/p = cosT
-      qSF = std::abs(cos(pPar.constAt(itrack, 5, 0)));
+      qSF = std::abs(vdt::fast_cosf(pPar.constAt(itrack, 5, 0)));
     }
 
     const float qCorr = pcm * qSF;
@@ -1384,23 +1415,24 @@ namespace mkfit {
       MPlexLV propPar;
       clearFailFlag();
 
-      if constexpr (Config::usePropToPlane) {
+      if /*constexpr*/ (Config::usePropToPlane) {
         // Maybe could use 2 matriplex packers ... ModuleInfo has 3 * SVector3 and uint
-        MPlexHV norm, dir;
-        packModuleNormDir(layer_of_hits, hit_cnt, norm, dir, N_proc);
+	MPlexHV norm, dir, pnt;
+	packModuleNormDirPnt(layer_of_hits, hit_cnt, norm, dir, pnt, N_proc);
         kalmanPropagateAndComputeChi2Plane(m_Err[iP],
                                            m_Par[iP],
                                            m_Chg,
                                            m_msErr,
                                            m_msPar,
-                                           norm,
+      				                             norm,
                                            dir,
+                                           pnt,
                                            outChi2,
                                            propPar,
                                            m_FailFlag,
                                            N_proc,
                                            m_prop_config->finding_intra_layer_pflags,
-                                           m_prop_config->finding_requires_propagation_to_hit_pos);
+      				     m_prop_config->finding_requires_propagation_to_hit_pos);
       } else {
         (*fnd_foos.m_compute_chi2_foo)(m_Err[iP],
                                        m_Par[iP],
@@ -1439,9 +1471,11 @@ namespace mkfit {
                   isStripQCompatible(itrack, layer_of_hits.is_barrel(), m_Err[iP], propPar, m_msErr, m_msPar);
 
               //rescale strip charge to track parameters and reapply the cut
-              isCompatible &= passStripChargePCMfromTrack(
+	      if (isCompatible && layer_of_hits.layer_info().has_charge()) {
+                isCompatible = passStripChargePCMfromTrack(
                   itrack, layer_of_hits.is_barrel(), charge_pcm[itrack], Hit::minChargePerCM(), propPar, m_msErr);
-            }
+	      }
+	    }
             // Select only SiStrip hits with cluster size < maxClusterSize
             if (!layer_of_hits.is_pixel()) {
               if (layer_of_hits.refHit(m_XHitArr.At(itrack, hit_cnt, 0)).spanRows() >=
@@ -1513,7 +1547,7 @@ namespace mkfit {
                 bool hitExists = false;
                 int maxHits = m_NFoundHits(itrack, 0, 0);
                 if (layer_of_hits.is_pixel()) {
-                  for (int i = 0; i <= maxHits; ++i) {
+                  for (int i = 0; i < maxHits; ++i) {
                     if (i > 2)
                       break;
                     if (m_HoTArrs[itrack][i].layer == layer_of_hits.layer_id()) {
@@ -1590,7 +1624,7 @@ namespace mkfit {
       }
 
       dprint("ADD FAKE HIT FOR TRACK #" << itrack << " withinBounds=" << (fake_hit_idx != Hit::kHitEdgeIdx)
-                                        << " r=" << std::hypot(m_Par[iP](itrack, 0, 0), m_Par[iP](itrack, 1, 0)));
+                                        << " r=" << hipo(m_Par[iP](itrack, 0, 0), m_Par[iP](itrack, 1, 0)));
 
       // QQQ as above, only create and add if score better
       TrackCand newcand;
@@ -1655,23 +1689,22 @@ namespace mkfit {
       MPlexLV propPar;
       clearFailFlag();
 
-      if constexpr (Config::usePropToPlane) {
+      if /*constexpr*/ (Config::usePropToPlane) {
         // Maybe could use 2 matriplex packers ... ModuleInfo has 3 * SVector3 and uint
-        MPlexHV norm, dir;
-        packModuleNormDir(layer_of_hits, hit_cnt, norm, dir, N_proc);
-        kalmanPropagateAndComputeChi2Plane(m_Err[iP],
-                                           m_Par[iP],
-                                           m_Chg,
-                                           m_msErr,
-                                           m_msPar,
-                                           norm,
-                                           dir,
-                                           outChi2,
-                                           propPar,
-                                           m_FailFlag,
-                                           N_proc,
-                                           m_prop_config->finding_intra_layer_pflags,
-                                           m_prop_config->finding_requires_propagation_to_hit_pos);
+        MPlexHV norm, dir, pnt;
+        packModuleNormDirPnt(layer_of_hits, hit_cnt, norm, dir, pnt, N_proc);
+        kalmanPropagateAndComputeChi2Plane(m_Err[iC],
+                                     m_Par[iC],
+                                     m_Chg,
+                                     m_msErr,
+                                     m_msPar,
+                                     norm, dir, pnt,
+                                     outChi2,
+                                     propPar,
+                                     m_FailFlag,
+                                     N_proc,
+                                     m_prop_config->finding_intra_layer_pflags,
+                                     m_prop_config->finding_requires_propagation_to_hit_pos);
       } else {
         (*fnd_foos.m_compute_chi2_foo)(m_Err[iP],
                                        m_Par[iP],
@@ -1725,7 +1758,7 @@ namespace mkfit {
               bool hitExists = false;
               int maxHits = m_NFoundHits(itrack, 0, 0);
               if (layer_of_hits.is_pixel()) {
-                for (int i = 0; i <= maxHits; ++i) {
+                for (int i = 0; i < maxHits; ++i) {
                   if (i > 2)
                     break;
                   if (ccand.hot(i).layer == layer_of_hits.layer_id()) {
@@ -1778,12 +1811,12 @@ namespace mkfit {
     }  //end loop over hits
 
     //now add invalid hit
-    for (int itrack = 0; itrack < NN; ++itrack) {
+    for (int itrack = 0; itrack < N_proc; ++itrack) {
       dprint("num_all_minus_one_hits(" << itrack << ")=" << num_all_minus_one_hits(itrack));
 
       // Cands that miss the layer are stashed away in MkBuilder(), before propagation,
       // and then merged back afterwards.
-      if (itrack >= N_proc || m_XWsrResult[itrack].m_wsr == WSR_Outside) {
+      if (m_XWsrResult[itrack].m_wsr == WSR_Outside) {
         continue;
       }
 
@@ -1838,22 +1871,21 @@ namespace mkfit {
     // See comment in MkBuilder::find_tracks_in_layer() about intra / inter flags used here
     // for propagation to the hit.
     clearFailFlag();
-    if constexpr (Config::usePropToPlane) {
-      MPlexHV norm, dir;
-      packModuleNormDir(layer_of_hits, 0, norm, dir, N_proc);
+    if /*constexpr*/ (Config::usePropToPlane) {
+      MPlexHV norm, dir, pnt;
+      packModuleNormDirPnt(layer_of_hits, 0, norm, dir, pnt, N_proc);
       kalmanPropagateAndUpdatePlane(m_Err[iP],
-                                    m_Par[iP],
-                                    m_Chg,
-                                    m_msErr,
-                                    m_msPar,
-                                    norm,
-                                    dir,
-                                    m_Err[iC],
-                                    m_Par[iC],
-                                    m_FailFlag,
-                                    N_proc,
-                                    m_prop_config->finding_inter_layer_pflags,
-                                    m_prop_config->finding_requires_propagation_to_hit_pos);
+                                   m_Par[iP],
+                                   m_Chg,
+                                   m_msErr,
+                                   m_msPar,
+                                   norm, dir, pnt,
+                                   m_Err[iC],
+                                   m_Par[iC],
+                                   m_FailFlag,
+                                   N_proc,
+                                   m_prop_config->finding_inter_layer_pflags,
+                                   m_prop_config->finding_requires_propagation_to_hit_pos);
     } else {
       (*fnd_foos.m_update_param_foo)(m_Err[iP],
                                      m_Par[iP],
@@ -1994,6 +2026,7 @@ namespace mkfit {
 
       m_Err[iO].copyOut(itrack, trk.errors_nc().Array());
       m_Par[iO].copyOut(itrack, trk.parameters_nc().Array());
+      trk.setCharge(m_Chg.At(itrack, 0, 0));
 
       trk.setChi2(m_Chi2(itrack, 0, 0));
       if (isFinite(trk.chi2())) {
@@ -2015,6 +2048,7 @@ namespace mkfit {
 
       m_Err[iO].copyOut(itrack, trk.errors_nc().Array());
       m_Par[iO].copyOut(itrack, trk.parameters_nc().Array());
+      trk.setCharge(m_Chg.At(itrack, 0, 0));
 
       trk.setChi2(m_Chi2(itrack, 0, 0));
       if (isFinite(trk.chi2())) {
@@ -2110,18 +2144,13 @@ namespace mkfit {
       }
 
       //fixup invpt sign and charge
-      for (int n = 0; n < NN; ++n) {
-        if (n < N_proc && m_Par[iC].At(n, 3, 0) < 0) {
-          m_Chg.At(n, 0, 0) = -m_Chg.At(n, 0, 0);
-          m_Par[iC].At(n, 3, 0) = -m_Par[iC].At(n, 3, 0);
-        }
-      }
+      kalmanCheckChargeFlip(m_Par[iC], m_Chg, N_proc);
 
 #ifdef DEBUG_BACKWARD_FIT_BH
       // Dump per hit chi2
       for (int i = 0; i < N_proc; ++i) {
-        float r_h = std::hypot(m_msPar.At(i, 0, 0), m_msPar.At(i, 1, 0));
-        float r_t = std::hypot(m_Par[iC].At(i, 0, 0), m_Par[iC].At(i, 1, 0));
+        float r_h = hipo(m_msPar.At(i, 0, 0), m_msPar.At(i, 1, 0));
+        float r_t = hipo(m_Par[iC].At(i, 0, 0), m_Par[iC].At(i, 1, 0));
 
         // if ((std::isnan(tmp_chi2[i]) || std::isnan(r_t)))
         // if ( ! std::isnan(tmp_chi2[i]) && tmp_chi2[i] > 0) // && tmp_chi2[i] > 30)
@@ -2151,7 +2180,7 @@ namespace mkfit {
               m_Par[ti].At(i, 5, 0),                                     // pt, phi, theta
               std::atan2(m_msPar.At(i, 1, 0), m_msPar.At(i, 0, 0)),      // phi_h
               std::atan2(m_Par[ti].At(i, 1, 0), m_Par[ti].At(i, 0, 0)),  // phi_t
-              1e4f * std::hypot(m_msPar.At(i, 0, 0) - m_Par[ti].At(i, 0, 0),
+              1e4f * hipo(m_msPar.At(i, 0, 0) - m_Par[ti].At(i, 0, 0),
                                 m_msPar.At(i, 1, 0) - m_Par[ti].At(i, 1, 0)),  // d_xy
               1e4f * (m_msPar.At(i, 2, 0) - m_Par[ti].At(i, 2, 0))             // d_z
               // e2s((m_msErr.At(i,0,0) + m_msErr.At(i,1,1)) / (r_h * r_h)),     // ephi_h
@@ -2174,6 +2203,10 @@ namespace mkfit {
     for (int i = 0; i < 6; ++i) {
       printf("  %12.4g", m_Par[corp].constAt(mslot, i, 0));
     }
+    float pt = 1.0f / m_Par[corp].constAt(mslot, 3, 0);
+    float p_eta = getEta(m_Par[corp].constAt(mslot, 5, 0));
+    float p_phi = m_Par[corp].constAt(mslot, 4, 0);
+    printf("   ;   pT=%.5f, p_eta=%.5f, p_phi=%.5f", pt, p_eta, p_phi);
     printf("\nError matrix\n");
     for (int i = 0; i < 6; ++i) {
       for (int j = 0; j < 6; ++j) {
@@ -2298,6 +2331,9 @@ namespace mkfit {
                               N_proc);
       }
 
+      //fixup invpt sign and charge
+      kalmanCheckChargeFlip(m_Par[iC], m_Chg, N_proc);
+
 #if defined(DEBUG_PROP_UPDATE)
       printf("\nbkfit at layer %d, track in slot %d -- fail=%d, had hit=%d (%g, %g, %g)\n",
              LI.layer_id(),
@@ -2313,8 +2349,8 @@ namespace mkfit {
       print_par_err(iC, DSLOT);
 #endif
 
-      // Fixup for failed propagation or invpt sign and charge.
-      for (int i = 0; i < NN; ++i) {
+      // Fixup for failed propagation.
+      // for (int i = 0; i < NN; ++i) {
         // PROP-FAIL-ENABLE The following to be enabled when propagation failure
         // detection is properly implemented in propagate-to-R/Z.
         // 1. The following code was only expecting barrel state to be restored.
@@ -2349,12 +2385,7 @@ namespace mkfit {
           m_Par[iC].copySlot(i, m_Par[iP]);
         }
         */
-        // Fixup invpt sign and charge.
-        if (i < N_proc && m_Par[iC].At(i, 3, 0) < 0) {
-          m_Chg.At(i, 0, 0) = -m_Chg.At(i, 0, 0);
-          m_Par[iC].At(i, 3, 0) = -m_Par[iC].At(i, 3, 0);
-        }
-      }
+      // }
 
 #if defined(DEBUG_BACKWARD_FIT)
       // clang-format off
@@ -2384,7 +2415,7 @@ namespace mkfit {
               bb.pT(), beg_cur_sep, 1.0f / m_Par[ti].At(i, 3, 0),
               bb.posEta(),
               bb.posPhi(), beg_cur_sep, std::atan2(m_Par[ti].At(i, 1, 0), m_Par[ti].At(i, 0, 0)),
-              std::hypot(m_Par[ti].At(i, 0, 0), m_Par[ti].At(i, 1, 0)),
+              hipo(m_Par[ti].At(i, 0, 0), m_Par[ti].At(i, 1, 0)),
               m_Par[ti].At(i, 2, 0),
               chi_prnt,
               std::isnan(chi), std::isfinite(chi), chi > 0,
@@ -2396,7 +2427,223 @@ namespace mkfit {
               e2s(std::abs(m_Err[ti].At(i, 0, 0))),
               e2s(std::abs(m_Err[ti].At(i, 1, 1))),
               e2s(std::abs(m_Err[ti].At(i, 2, 2))),  // sx_t sy_t sz_t -- track errors
-              1e4f * std::hypot(m_msPar.At(i, 0, 0) - m_Par[ti].At(i, 0, 0),
+              1e4f * hipo(m_msPar.At(i, 0, 0) - m_Par[ti].At(i, 0, 0),
+                                m_msPar.At(i, 1, 0) - m_Par[ti].At(i, 1, 0)),  // d_xy
+              1e4f * (m_msPar.At(i, 2, 0) - m_Par[ti].At(i, 2, 0))             // d_z
+          );
+        }
+      }
+      // clang-format on
+#endif
+
+      // update chi2
+      m_Chi2.add(tmp_chi2);
+    }
+  }
+
+  void MkFinder::bkFitFitTracksProp2Plane(const EventOfHits &eventofhits,
+                                          const SteeringParams &st_par,
+                                          const int N_proc,
+                                          bool chiDebug) {
+    // Prototyping final backward fit.
+    // This works with track-finding indices, before remapping.
+    //
+    // Layers should be collected during track finding and list all layers that have actual hits.
+    // Then we could avoid checking which layers actually do have hits.
+
+    // bool debug = true;
+
+    MPlexQF tmp_chi2;
+    MPlexQI done_flag(0);
+
+    MPlexHV plNrm;  // input detector plane [pl - plane]
+    MPlexHV plDir;  // ""
+    MPlexHV plPnt;  // ""
+
+#if defined(DEBUG_PROP_UPDATE)
+    const int DSLOT = 0;
+    int DSLOT_layer;
+    printf("bkfit-p2p entry, track in slot %d\n", DSLOT);
+    print_par_err(iC, DSLOT);
+#endif
+
+    int done_count = 0;
+    while (done_count != N_proc) {
+#if defined(DEBUG_BACKWARD_FIT)
+      const Hit *last_hit_ptr[NN];
+#endif
+
+      int here_count = 0;
+      for (int i = 0; i < N_proc; ++i) {
+        if (done_flag[i])
+          continue;
+
+        // skip invalid hits
+        while (m_CurNode[i] >= 0 && m_HoTNodeArr[i][m_CurNode[i]].m_hot.index < 0) {
+          m_CurNode[i] = m_HoTNodeArr[i][m_CurNode[i]].m_prev_idx;
+        }
+
+        if (m_CurNode[i] < 0) {
+          // Mark as done and copy out.
+          done_flag[i] = 1;
+          ++done_count;
+
+          TrackCand &trk = *m_TrkCand[i];
+          m_Err[iC].copyOut(i, trk.errors_nc().Array());
+          m_Par[iC].copyOut(i, trk.parameters_nc().Array());
+          trk.setCharge(m_Chg[i]);
+          trk.setChi2(m_Chi2[i]);
+          if (isFinite(trk.chi2())) {
+            trk.setScore(getScoreCand(m_steering_params->m_track_scorer, trk));
+          }
+        } else {
+          // Prepare the next hit and module info.
+
+          // Skip the overlap hits -- if they exist.
+          // 1. Overlap hit gets placed *after* the original hit in TrackCand::exportTrack()
+          // which is *before* in the reverse iteration that we are doing here.
+          // 2. Seed-hit merging can result in more than two hits per layer.
+          // while (m_CurHit[i] > 0 && m_HoTArr[ i ][ m_CurHit[i] - 1 ].layer == layer) --m_CurHit[i];
+
+          const int layer = m_HoTNodeArr[i][m_CurNode[i]].m_hot.layer;
+          while (m_HoTNodeArr[i][m_CurNode[i]].m_prev_idx >= 0 &&
+                 m_HoTNodeArr[i][m_HoTNodeArr[i][m_CurNode[i]].m_prev_idx].m_hot.layer == layer)
+            m_CurNode[i] = m_HoTNodeArr[i][m_CurNode[i]].m_prev_idx;
+
+          const LayerOfHits &L = eventofhits[layer];
+          const Hit &hit = L.refHit(m_HoTNodeArr[i][m_CurNode[i]].m_hot.index);
+          const ModuleInfo &mi = L.layer_info().module_info(hit.detIDinLayer());
+
+          m_msErr.copyIn(i, hit.errArray());
+          m_msPar.copyIn(i, hit.posArray());
+          plNrm.copyIn(i, mi.zdir.Array());
+          plDir.copyIn(i, mi.xdir.Array());
+          plPnt.copyIn(i, mi.pos.Array());
+
+          ++here_count;
+
+          m_CurNode[i] = m_HoTNodeArr[i][m_CurNode[i]].m_prev_idx;
+
+#ifdef DEBUG_BACKWARD_FIT
+          last_hit_ptr[i] = &hit;
+#endif
+#if defined(DEBUG_PROP_UPDATE)
+          DSLOT_layer = layer;
+#endif
+        }
+      }
+
+      if (done_count == N_proc)
+        break;
+      if (here_count == 0)
+        continue;
+
+      // ZZZ Could add missing hits here, only if there are any actual matches.
+
+      clearFailFlag();
+
+      // PROP-FAIL-ENABLE We do not check for pfailed propagation here
+      // clang-format off
+
+      m_FailFlag.setVal(0);
+      propagateHelixToPlaneMPlex(m_Err[iC], m_Par[iC], m_Chg, plPnt, plNrm,
+                                 m_Err[iP], m_Par[iP], m_FailFlag,
+                                 N_proc, m_prop_config->backward_fit_pflags, nullptr);
+      kalmanOperationPlaneLocal(KFO_Calculate_Chi2 | KFO_Update_Params | KFO_Local_Cov,
+                                m_Err[iP], m_Par[iP], m_Chg, m_msErr, m_msPar, plNrm, plDir, plPnt,
+                                m_Err[iC], m_Par[iC], tmp_chi2, N_proc);
+      kalmanCheckChargeFlip(m_Par[iC], m_Chg, N_proc);
+
+#if defined(DEBUG_PROP_UPDATE)
+      printf("\nbkfit at layer %d, track in slot %d -- fail=%d, hit_xyz = (%g, %g, %g)\n",
+             DSLOT_layer, DSLOT, m_FailFlag[DSLOT],
+             m_msPar(DSLOT, 0, 0), m_msPar(DSLOT, 1, 0), m_msPar(DSLOT, 2, 0));
+      printf("Propagated:\n");
+      print_par_err(iP, DSLOT);
+      printf("Updated:\n");
+      print_par_err(iC, DSLOT);
+#endif
+      // clang-format on
+
+      // Fixup for failed propagation.
+      // for (int i = 0; i < NN; ++i) {
+      // PROP-FAIL-ENABLE The following to be enabled when propagation failure
+      // detection is properly implemented in propagate-to-R/Z.
+      // 1. The following code was only expecting barrel state to be restored.
+      //      auto barrel_pf(m_prop_config->backward_fit_pflags);
+      //      barrel_pf.copy_input_state_on_fail = true;
+      // 2. There is also check on chi2, commented out to keep physics changes minimal.
+      /*
+        if (m_FailFlag[i] && LI.is_barrel()) {
+          // Barrel pflags are set to include PF_copy_input_state_on_fail.
+          // Endcap errors are immaterial here (relevant for fwd search), with prop error codes
+          // one could do other things.
+          // Are there also fail conditions in KalmanUpdate?
+#ifdef DEBUG
+          if (debug && g_debug) {
+            dprintf("MkFinder::bkFitFitTracks prop fail: chi2=%f, layer=%d, label=%d. Recovering.\n",
+                    tmp_chi2[i], LI.layer_id(), m_Label[i]);
+            print_par_err(iC, i);
+          }
+#endif
+          m_Err[iC].copySlot(i, m_Err[iP]);
+          m_Par[iC].copySlot(i, m_Par[iP]);
+        } else if (tmp_chi2[i] > 200 || tmp_chi2[i] < 0) {
+#ifdef DEBUG
+          if (debug && g_debug) {
+            dprintf("MkFinder::bkFitFitTracks chi2 fail: chi2=%f, layer=%d, label=%d. Recovering.\n",
+                    tmp_chi2[i], LI.layer_id(), m_Label[i]);
+            print_par_err(iC, i);
+          }
+#endif
+          // Go back to propagated state (at the current hit, the previous one is lost).
+          m_Err[iC].copySlot(i, m_Err[iP]);
+          m_Par[iC].copySlot(i, m_Par[iP]);
+        }
+        */
+      // }
+
+#if defined(DEBUG_BACKWARD_FIT)
+      // clang-format off
+      bool debug = true;
+      const char beg_cur_sep = '/'; // set to ' ' root parsable printouts
+      for (int i = 0; i < N_proc; ++i) {
+        if (chiDebug && last_hit_ptr[i]) {
+          TrackCand &bb = *m_TrkCand[i];
+          int ti = iP;
+          float chi = tmp_chi2.At(i, 0, 0);
+          float chi_prnt = std::isfinite(chi) ? chi : -9;
+
+#if defined(MKFIT_STANDALONE)
+          const MCHitInfo &mchi = m_event->simHitsInfo_[last_hit_ptr[i]->mcHitID()];
+
+          dprintf("BKF_OVERLAP %d %d %d %d %d %d %d "
+                  "%f%c%f %f %f%c%f %f %f %f %d %d %d %d "
+                  "%f %f %f %f %f\n",
+              m_event->evtID(),
+#else
+          dprintf("BKF_OVERLAP %d %d %d %d %d %d "
+                  "%f%c%f %f %f%c%f %f %f %f %d %d %d "
+                  "%f %f %f %f %f\n",
+#endif
+              bb.label(), (int)bb.prodType(), bb.isFindable(),
+              layer, L.is_stereo(), L.is_barrel(),
+              bb.pT(), beg_cur_sep, 1.0f / m_Par[ti].At(i, 3, 0),
+              bb.posEta(),
+              bb.posPhi(), beg_cur_sep, std::atan2(m_Par[ti].At(i, 1, 0), m_Par[ti].At(i, 0, 0)),
+              hipo(m_Par[ti].At(i, 0, 0), m_Par[ti].At(i, 1, 0)),
+              m_Par[ti].At(i, 2, 0),
+              chi_prnt,
+              std::isnan(chi), std::isfinite(chi), chi > 0,
+#if defined(MKFIT_STANDALONE)
+              mchi.mcTrackID(),
+#endif
+              // The following three can get negative / prouce nans in e2s.
+              // std::abs the args for FPE hunt.
+              e2s(std::abs(m_Err[ti].At(i, 0, 0))),
+              e2s(std::abs(m_Err[ti].At(i, 1, 1))),
+              e2s(std::abs(m_Err[ti].At(i, 2, 2))),  // sx_t sy_t sz_t -- track errors
+              1e4f * hipo(m_msPar.At(i, 0, 0) - m_Par[ti].At(i, 0, 0),
                                 m_msPar.At(i, 1, 0) - m_Par[ti].At(i, 1, 0)),  // d_xy
               1e4f * (m_msPar.At(i, 2, 0) - m_Par[ti].At(i, 2, 0))             // d_z
           );

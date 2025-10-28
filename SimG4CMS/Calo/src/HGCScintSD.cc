@@ -8,7 +8,6 @@
 #include "DataFormats/ForwardDetId/interface/HGCScintillatorDetId.h"
 #include "SimG4CMS/Calo/interface/HGCScintSD.h"
 #include "SimG4CMS/Calo/interface/CaloSimUtils.h"
-#include "SimG4Core/Notification/interface/TrackInformation.h"
 #include "SimDataFormats/CaloTest/interface/HGCalTestNumbering.h"
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "FWCore/Utilities/interface/Exception.h"
@@ -94,7 +93,7 @@ HGCScintSD::HGCScintSD(const std::string& name,
 
   if (!fileName_.empty()) {
     edm::FileInPath filetmp("SimG4CMS/Calo/data/" + fileName_);
-    std::string fileName = filetmp.fullPath();
+    const std::string& fileName = filetmp.fullPath();
     std::ifstream fInput(fileName.c_str());
     if (!fInput.good()) {
       edm::LogVerbatim("HGCSim") << "Cannot open file " << fileName;

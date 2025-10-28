@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include "catch2/catch_all.hpp"
 
 #include "oneapi/tbb/global_control.h"
 
@@ -11,7 +11,7 @@ namespace {
   constexpr char const* errorContext() { return "WaitingThreadPool test"; }
 }  // namespace
 
-TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool") {
+TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool]") {
   // Using parallelism 2 here because otherwise the
   // tbb::task_arena::enqueue() in WaitingTaskWithArenaHolder will
   // start a new TBB thread that "inherits" the name from the
@@ -28,8 +28,7 @@ TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool") {
       using namespace edm::waiting_task::chain;
       auto h = first([&pool, &count](edm::WaitingTaskHolder h) {
                  edm::WaitingTaskWithArenaHolder h2(std::move(h));
-                 pool.runAsync(
-                     std::move(h2), [&count]() { ++count; }, errorContext);
+                 pool.runAsync(std::move(h2), [&count]() { ++count; }, errorContext);
                }) |
                lastTask(edm::WaitingTaskHolder(group, &waitTask));
       h.doneWaiting(std::exception_ptr());
@@ -62,8 +61,7 @@ TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool") {
                        ++count;
                      },
                      errorContext);
-                 pool.runAsync(
-                     h2, [&count]() { ++count; }, errorContext);
+                 pool.runAsync(h2, [&count]() { ++count; }, errorContext);
                }) |
                lastTask(edm::WaitingTaskHolder(group, &waitTask));
       h.doneWaiting(std::exception_ptr());
@@ -90,8 +88,7 @@ TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool") {
                   while (mayContinue != 2) {
                     hardware_pause();
                   }
-                  pool.runAsync(
-                      h2, [&count]() { ++count; }, errorContext);
+                  pool.runAsync(h2, [&count]() { ++count; }, errorContext);
                 }) |
                 lastTask(edm::WaitingTaskHolder(group, &waitTask));
 
@@ -101,8 +98,7 @@ TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool") {
                   while (mayContinue != 2) {
                     hardware_pause();
                   }
-                  pool.runAsync(
-                      h2, [&count]() { ++count; }, errorContext);
+                  pool.runAsync(h2, [&count]() { ++count; }, errorContext);
                 }) |
                 lastTask(edm::WaitingTaskHolder(group, &waitTask));
       h2.doneWaiting(std::exception_ptr());
@@ -125,15 +121,15 @@ TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool") {
         using namespace edm::waiting_task::chain;
         auto h = first([&pool](edm::WaitingTaskHolder h) {
                    edm::WaitingTaskWithArenaHolder h2(std::move(h));
-                   pool.runAsync(
-                       std::move(h2), []() { throw std::runtime_error("error"); }, errorContext);
+                   pool.runAsync(std::move(h2), []() { throw std::runtime_error("error"); }, errorContext);
                  }) |
                  lastTask(edm::WaitingTaskHolder(group, &waitTask));
         h.doneWaiting(std::exception_ptr());
       }
-      REQUIRE_THROWS_WITH(
-          waitTask.wait(),
-          Catch::Contains("error") and Catch::Contains("StdException") and Catch::Contains("WaitingThreadPool test"));
+      REQUIRE_THROWS_WITH(waitTask.wait(),
+                          Catch::Matchers::ContainsSubstring("error") and
+                              Catch::Matchers::ContainsSubstring("StdException") and
+                              Catch::Matchers::ContainsSubstring("WaitingThreadPool test"));
       REQUIRE(count.load() == 0);
     }
 
@@ -265,8 +261,7 @@ TEST_CASE("Test WaitingThreadPool", "[edm::WaitingThreadPool") {
 
         auto h2 = first([&pool, &count](edm::WaitingTaskHolder h) {
                     edm::WaitingTaskWithArenaHolder h2(std::move(h));
-                    pool.runAsync(
-                        h2, [&count]() { ++count; }, errorContext);
+                    pool.runAsync(h2, [&count]() { ++count; }, errorContext);
                   }) |
                   lastTask(edm::WaitingTaskHolder(group, &waitTask));
         h2.doneWaiting(std::exception_ptr());

@@ -1,0 +1,296 @@
+#!/usr/bin/env python3
+import pycurl
+from io import BytesIO
+import pycurl
+import ast
+import subprocess
+import pandas as pd
+import argparse
+from bs4 import BeautifulSoup
+import numpy as np
+import os
+import json
+import sys
+import itertools
+import json
+import re
+
+## Helpers
+base_cert_url = "https://cms-service-dqmdc.web.cern.ch/CAF/certification/"
+base_cert_eos = "/eos/user/c/cmsdqm/www/CAF/certification/"
+base_cert_cvmfs = "/cvmfs/cms-griddata.cern.ch/cat/metadata/DC/"
+
+def get_url_clean(url):
+    
+    buffer = BytesIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, url)
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+    c.close()
+    
+    return BeautifulSoup(buffer.getvalue(), "lxml").text
+
+def get_lumi_ranges(i):
+    result = []
+    for _, b in itertools.groupby(enumerate(i), lambda pair: pair[1] - pair[0]):
+        b = list(b)
+        result.append([b[0][1],b[-1][1]]) 
+    return result
+
+def das_do_command(cmd):
+    out = subprocess.check_output(cmd, shell=True, executable="/bin/bash").decode('utf8')
+    return out.split("\n")
+
+def das_key(dataset):
+    return 'dataset='+dataset if "#" not in dataset else 'block='+dataset
+
+def das_file_site(dataset, site):
+    cmd = "dasgoclient --query='file %s site=%s'"%(das_key(dataset),site)
+    out = das_do_command(cmd)
+    df = pd.DataFrame(out,columns=["file"])
+
+    return df
+
+def das_file_data(dataset,opt=""):
+    cmd = "dasgoclient --query='file %s %s| grep file.name, file.nevents'"%(das_key(dataset),opt)
+    out = das_do_command(cmd)
+    out = [np.array(r.split(" "))[[0,3]] for r in out if len(r) > 0]
+
+    df = pd.DataFrame(out,columns=["file","events"])
+    df.events = df.events.values.astype(int)
+    
+    return df
+
+def das_lumi_data(dataset,opt=""):
+        
+    cmd = "dasgoclient --query='file,lumi,run %s %s'"%(das_key(dataset),opt)
+    
+    out = das_do_command(cmd)
+    out = [r.split(" ") for r in out if len(r)>0]
+    
+    df = pd.DataFrame(out,columns=["file","run","lumis"])
+    
+    return df
+
+def das_run_events_data(dataset,run,opt=""):
+    cmd = "dasgoclient --query='file %s run=%s %s | sum(file.nevents) '"%(das_key(dataset),run,opt)
+    out = das_do_command(cmd)[0]
+
+    out = [o for o in out.split(" ") if "sum" not in o]
+    out = int([r.split(" ") for r in out if len(r)>0][0][0])
+
+    return out
+
+def das_run_data(dataset,opt=""):
+    cmd = "dasgoclient --query='run %s %s '"%(das_key(dataset),opt)
+    out = das_do_command(cmd)
+
+    return out
+
+def no_intersection():
+    print("No intersection between:")
+    print(" - json   : ", best_json)
+    print(" - dataset: ", dataset)
+    print("Exiting.")
+    sys.exit(1)
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset','-d', default=None, help="Dataset Name (e.g. '/DisplacedJet/Run2024C-v1/RAW', may also be a block (e.g /ZeroBias/Run2024J-v1/RAW#d8058bab-4e55-45b0-abb6-405aa3abc2af)",type=str,required=True)
+    parser.add_argument('--threshold','-t', help ="Event threshold per file",type=int,default=-1)
+    parser.add_argument('--events','-e', help ="Tot number of events targeted",type=int,default=-1)
+    parser.add_argument('--outfile','-o', help='Dump results to file', type=str, default=None)
+    parser.add_argument('--pandas', '-pd',action='store_true',help="Store the whole dataset (no event or threshold cut) in a csv") 
+    parser.add_argument('--proxy','-p', help='Allow to parse a x509 proxy if needed', type=str, default=None)
+    parser.add_argument('--site','-s', help='Only data at specific site', type=str, default=None)
+    parser.add_argument('--lumis','-l', help='Output file for lumi ranges for the selected files (if black no lumiranges calculated)', type=str, default=None)
+    parser.add_argument('--precheck','-pc', action='store_true', help='Check run per run before building the dataframes, to avoid huge caching.')
+    parser.add_argument('--nogolden','-ng', action='store_true', help='Do not crosscheck the dataset run and lumis with a Golden json for data certification')
+    parser.add_argument('--run','-r', help ="Target a specific run",type=int,default=None,nargs="+")
+    args = parser.parse_args()
+
+    if args.proxy is not None:
+        os.environ["X509_USER_PROXY"] = args.proxy
+    elif "X509_USER_PROXY" not in os.environ:
+        print("No X509 proxy set. Exiting.")
+        sys.exit(1)
+    
+    ## Check if we are in the cms-bot "environment"
+    testing = "JENKINS_PREFIX" in os.environ
+    dataset   = args.dataset
+    events    = args.events
+    threshold = args.threshold
+    outfile   = args.outfile
+    site      = args.site
+    lumis     = args.lumis
+    runs      = args.run
+    das_opt = ""
+    
+    if runs is not None:
+        das_opt = "run in %s"%(str([int(r) for r in runs]))
+
+    if not args.nogolden:
+            
+        ## get the greatest golden json
+        year = dataset.split("Run")[1][2:4] # from 20XX to XX
+        PD = dataset.split("/")[1]
+        cert_type = "Collisions" + str(year)
+        if "Cosmics" in dataset:
+            cert_type = "Cosmics" + str(year)
+        elif "Commisioning" in dataset:
+            cert_type = "Commisioning2020" 
+        elif "HI" in PD:
+            cert_type = "Collisions" + str(year) + "HI"
+        
+        cvmfs_path = base_cert_cvmfs + cert_type + "/"
+        eos_path = ""
+        web_path = ""
+        json_list_full = []
+        ## if we have access to cvmfs we get from there ...
+        if os.path.isdir(cvmfs_path):
+            cvmfs_path = cvmfs_path + "/latest/"
+            json_list_full = os.listdir(cvmfs_path)
+        ## ... if not we try eos ...
+        if len(json_list_full)==0:
+            eos_path = base_cert_eos + cert_type + "/"
+            if os.path.isdir(eos_path):
+                json_list_full = os.listdir(eos_path)
+        ## ... if not we go to the website
+        if len(json_list_full)==0:
+            web_path = base_cert_url + cert_type + "/"
+            json_list_full = get_url_clean(web_path).split("\n")
+        pattern = re.compile("(cert_collisions\d{4}_\d*_\d*_golden.json)(\s|$)", re.IGNORECASE)
+        json_list = [match.group(1) for entry in json_list_full for match in [re.search(pattern, entry)] if match and match.group(1)]
+        if len(json_list)==0:
+            raise RuntimeError("No matching JSON files found from {source} ({path}). The full list was:\n{list_full}".format(
+                source="web" if web_path else "eos" if eos_path else "cvmfs",
+                path=web_path if web_path else eos_path if eos_path else cvmfs_path,
+                list_full='\n'.join(json_list_full),
+            ))
+
+        # the larger the better, assuming file naming schema 
+        # Cert_X_RunStart_RunFinish_Type.json
+        # TODO if args.run keep golden only with right range
+        run_ranges = [int(c.split("_")[-2]) - int(c.split("_")[-3]) for c in json_list]
+        latest_json = np.array(json_list[np.argmax(run_ranges)]).reshape(1,-1)[0].astype(str)
+        best_json = str(latest_json[0])
+        if not web_path:
+            with open((eos_path if eos_path else cvmfs_path) + "/" + best_json) as js:
+                golden = json.load(js)
+        else:
+            golden = get_url_clean(web_path + best_json)
+            golden = ast.literal_eval(golden) #converts string to dict
+        
+        # skim for runs in input
+        if runs is not None:
+            for k in golden:
+                if k not in args.run:
+                    golden.pop(k)
+
+        # golden json with all the lumisections
+        golden_flat = {}
+        for k in golden:
+            R = []
+            for r in golden[k]:
+                R = R + [f for f in range(r[0],r[1]+1)]
+            golden_flat[k] = R
+
+        # let's just check there's an intersection between the
+        # dataset and the json
+        data_runs = das_run_data(dataset)
+        golden_data_runs = [r for r in data_runs if r in golden_flat]
+
+        if (len(golden_data_runs)==0):
+            no_intersection()
+
+        if testing:
+            golden_data_runs = golden_data_runs[:1] # take only the first run
+        # building the dataframe, cleaning for bad lumis
+        golden_data_runs_tocheck = golden_data_runs
+       
+        if args.precheck and not testing:
+            golden_data_runs_tocheck = []
+            # Here we check run per run.
+            # This implies more dasgoclient queries, but smaller outputs
+            # useful when running the IB/PR tests not to have huge
+            # query results that have to be cached.
+            sum_events = 0
+            for r in golden_data_runs: 
+                sum_events = sum_events + int(das_run_events_data(dataset,r))
+                golden_data_runs_tocheck.append(r)
+                if events > 0 and sum_events > events:
+                    break
+            das_opt = "run in %s"%(str([int(g) for g in golden_data_runs_tocheck]))
+            
+        if testing:
+            golden_data_runs_tocheck = golden_data_runs[:1] # take only the first run
+            # in testing mode we just take the first file
+            das_opt = "run=%s"%(golden_data_runs_tocheck[0])
+    
+    if not testing:
+        df = das_lumi_data(dataset,opt=das_opt).merge(das_file_data(dataset,opt=das_opt),on="file",how="inner") # merge file informations with run and lumis
+    else:
+        df = das_lumi_data(dataset,opt=das_opt)
+
+    df["lumis"] = [[int(ff) for ff in f.replace("[","").replace("]","").split(",")] for f in df.lumis.values]
+    
+    if not args.nogolden and not testing:
+
+        df_rs = []
+        for r in golden_data_runs_tocheck:
+            cut = (df["run"] == r)
+            if not any(cut):
+                continue
+
+            df_r = df[cut]
+
+            # jumping low event content runs
+            if df_r["events"].sum() < threshold:
+                continue
+
+            good_lumis = np.array([len([ll for ll in l if ll in golden_flat[r]]) for l in df_r.lumis])
+            n_lumis = np.array([len(l) for l in df_r.lumis])
+            df_rs.append(df_r[good_lumis==n_lumis])
+
+        if (len(df_rs)==0):
+            no_intersection()
+
+        df = pd.concat(df_rs)
+
+    df.loc[:,"min_lumi"] = [min(f) for f in df.lumis]
+    df.loc[:,"max_lumi"] = [max(f) for f in df.lumis]
+    df = df.sort_values(["run","min_lumi","max_lumi"])
+
+    if testing:
+        df = df.head(1) # take only the first file
+    if site is not None:
+        df = df.merge(das_file_site(dataset,site),on="file",how="inner")
+
+    if args.pandas:
+        df.to_csv(dataset.replace("/","")+".csv")
+
+    if events > 0 and not testing:
+        df = df[df["events"] <= events] #jump too big files
+        df.loc[:,"sum_evs"] = df.loc[:,"events"].cumsum()
+        df = df[df["sum_evs"] < events]
+        
+    files = df.file
+    
+    if lumis is not None:
+        lumi_ranges = { int(r) : list(get_lumi_ranges(np.sort(np.concatenate(df.loc[df["run"]==r,"lumis"].values).ravel()).tolist())) for r in np.unique(df.run.values).tolist()}
+        
+        with open(lumis, 'w') as fp:
+            json.dump(lumi_ranges, fp)
+
+    if outfile is not None:
+        with open(outfile, 'w') as f:
+            for line in files:
+                f.write(f"{line}\n") 
+    else:
+        print("\n".join(files))
+
+    sys.exit(0)
+
+    

@@ -9,8 +9,8 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "CondFormats/DataRecord/interface/HGCalElectronicsMappingRcd.h"
 #include "CondFormats/HGCalObjects/interface/HGCalMappingModuleIndexer.h"
-#include "CondFormats/HGCalObjects/interface/HGCalMappingParameterHostCollection.h"
-#include "CondFormats/HGCalObjects/interface/alpaka/HGCalMappingParameterDeviceCollection.h"
+#include "CondFormats/HGCalObjects/interface/HGCalMappingParameterHost.h"
+#include "CondFormats/HGCalObjects/interface/alpaka/HGCalMappingParameterDevice.h"
 #include "DataFormats/HGCalDigi/interface/HGCalElectronicsId.h"
 #include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
 #include "DataFormats/ForwardDetId/interface/HGCScintillatorDetId.h"
@@ -43,33 +43,36 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
 
       //
-      std::optional<HGCalMappingModuleParamHostCollection> produce(const HGCalElectronicsMappingRcd& iRecord) {
+      std::optional<HGCalMappingModuleParamHost> produce(const HGCalElectronicsMappingRcd& iRecord) {
         //get cell and module indexer
         auto modIndexer = iRecord.get(moduleIndexTkn_);
 
         // load dense indexing
-        const uint32_t size = modIndexer.maxModulesIdx_;
-        HGCalMappingModuleParamHostCollection moduleParams(size, cms::alpakatools::host());
+        const uint32_t size = modIndexer.maxModulesIndex();
+        HGCalMappingModuleParamHost moduleParams(size, cms::alpakatools::host());
         for (size_t i = 0; i < size; i++)
           moduleParams.view()[i].valid() = false;
 
         ::hgcal::mappingtools::HGCalEntityList pmap;
         pmap.buildFrom(filename_.fullPath());
-        auto& entities = pmap.getEntries();
-        for (auto row : entities) {
+        const auto& entities = pmap.getEntries();
+        for (const auto& row : entities) {
+          int cassette = pmap.hasColumn("cassette") ? pmap.getIntAttr("cassette", row) : 1;
           int fedid = pmap.getIntAttr("fedid", row);
           int captureblockidx = pmap.getIntAttr("captureblockidx", row);
           int econdidx = pmap.getIntAttr("econdidx", row);
           int idx = modIndexer.getIndexForModule(fedid, captureblockidx, econdidx);
           int typeidx = modIndexer.getTypeForModule(fedid, captureblockidx, econdidx);
-          std::string typecode = pmap.getAttr("typecode", row);
-          auto celltypes = modIndexer.convertTypeCode(typecode);
+          const std::string& typecode = pmap.getAttr("typecode", row);
+
+          auto celltypes = modIndexer.getCellType(typecode);
           bool isSiPM = celltypes.first;
           int celltype = celltypes.second;
           int zside = pmap.getIntAttr("zside", row);
           int plane = pmap.getIntAttr("plane", row);
           int i1 = pmap.getIntAttr("u", row);
           int i2 = pmap.getIntAttr("v", row);
+          uint8_t irot = (uint8_t)(pmap.hasColumn("irot") ? pmap.getIntAttr("irot", row) : 0);
           uint32_t eleid = HGCalElectronicsId((zside > 0), fedid, captureblockidx, econdidx, 0, 0).raw();
           uint32_t detid(0);
           if (!isSiPM) {
@@ -86,15 +89,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           module.plane() = plane;
           module.i1() = i1;
           module.i2() = i2;
+          module.irot() = irot;
           module.typeidx() = typeidx;
           module.fedid() = fedid;
           module.slinkidx() = pmap.getIntAttr("slinkidx", row);
           module.captureblock() = pmap.getIntAttr("captureblock", row);
-          ;
           module.econdidx() = econdidx;
           module.captureblockidx() = captureblockidx;
           module.eleid() = eleid;
           module.detid() = detid;
+          module.cassette() = cassette;
         }
 
         return moduleParams;

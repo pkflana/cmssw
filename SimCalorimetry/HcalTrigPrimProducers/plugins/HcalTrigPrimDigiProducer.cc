@@ -179,10 +179,7 @@ void HcalTrigPrimDigiProducer::beginRun(const edm::Run& run, const edm::EventSet
     if (hcalTTDetId.null())
       continue;
 
-    int aieta = abs(hcalTTDetId.ieta());
-    // Do not let ieta 29 in the map
-    if (aieta >= lastHERing)
-      continue;
+    int aieta = std::abs(hcalTTDetId.ieta());
 
     // Filter weight represented in fixed point 8 bit
     int fixedPointWeight = 255;
@@ -376,7 +373,7 @@ void HcalTrigPrimDigiProducer::produce(edm::Event& iEvent, const edm::EventSetup
   if (runZS_)
     theAlgo_.runZS(*result);
 
-  //  edm::LogInfo("HcalTrigPrimDigiProducer") << "HcalTrigPrims: " << result->size();
+  edm::LogInfo("HcalTrigPrimDigiProducer") << "HcalTrigPrims: " << result->size();
 
   // Step D: Put outputs into event
   iEvent.put(std::move(result));

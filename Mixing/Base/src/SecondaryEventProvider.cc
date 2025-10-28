@@ -5,10 +5,17 @@
 #include "FWCore/Framework/interface/ExceptionHelpers.h"
 #include "FWCore/Framework/interface/PreallocationConfiguration.h"
 #include "FWCore/Framework/interface/TransitionInfoTypes.h"
+#include "FWCore/Framework/interface/SignallingProductRegistryFiller.h"
+#include "FWCore/Framework/interface/ModuleRegistry.h"
+#include "FWCore/Framework/interface/ModuleRegistryUtilities.h"
+#include "FWCore/Framework/interface/maker/MakeModuleParams.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
-#include "DataFormats/Provenance/interface/ProductRegistry.h"
+#include "FWCore/Utilities/interface/make_sentry.h"
+#include "FWCore/ServiceRegistry/interface/ProcessContext.h"
 #include "oneapi/tbb/task_arena.h"
+
+#include <mutex>
 
 namespace {
   template <typename T, typename U>
@@ -50,18 +57,30 @@ namespace {
 
 namespace edm {
   SecondaryEventProvider::SecondaryEventProvider(std::vector<ParameterSet>& psets,
-                                                 ProductRegistry& preg,
+                                                 SignallingProductRegistryFiller& preg,
                                                  std::shared_ptr<ProcessConfiguration> processConfiguration)
       : exceptionToActionTable_(new ExceptionToActionTable),
+        moduleRegistry_(std::make_shared<ModuleRegistry>(nullptr)),
+        activityRegistry_(std::make_shared<ActivityRegistry>()),
         // no type resolver for modules in SecondaryEventProvider for now
-        workerManager_(std::make_shared<ActivityRegistry>(), *exceptionToActionTable_, nullptr) {
+        workerManager_(moduleRegistry_, activityRegistry_, *exceptionToActionTable_) {
     std::vector<std::string> shouldBeUsedLabels;
     std::set<std::string> unscheduledLabels;
     const PreallocationConfiguration preallocConfig;
     for (auto& pset : psets) {
       std::string label = pset.getParameter<std::string>("@module_label");
-      workerManager_.addToUnscheduledWorkers(
-          pset, preg, &preallocConfig, processConfiguration, label, unscheduledLabels, shouldBeUsedLabels);
+      MakeModuleParams params(&pset, preg, &preallocConfig, processConfiguration);
+      auto module = moduleRegistry_->getModule(params,
+                                               label,
+                                               activityRegistry_->preModuleConstructionSignal_,
+                                               activityRegistry_->postModuleConstructionSignal_);
+      if (module->moduleType() != edm::maker::ModuleHolder::Type::kProducer or
+          module->moduleType() != edm::maker::ModuleHolder::Type::kFilter) {
+        throw edm::Exception(edm::errors::Configuration)
+            << "The module with label " << label << " is not an EDProducer or EDFilter so can not be run unscheduled";
+      }
+      workerManager_.addToUnscheduledWorkers(module->moduleDescription());
+      unscheduledLabels.insert(label);
     }
     if (!unscheduledLabels.empty()) {
       preg.setUnscheduledProducts(unscheduledLabels);
@@ -69,9 +88,15 @@ namespace edm {
   }  // SecondaryEventProvider::SecondaryEventProvider
 
   void SecondaryEventProvider::beginJob(ProductRegistry const& iRegistry,
-                                        eventsetup::ESRecordsToProductResolverIndices const& iIndices) {
+                                        eventsetup::ESRecordsToProductResolverIndices const& iIndices,
+                                        GlobalContext const& globalContext) {
     ProcessBlockHelper dummyProcessBlockHelper;
-    workerManager_.beginJob(iRegistry, iIndices, dummyProcessBlockHelper);
+    finishModulesInitialization(*moduleRegistry_,
+                                iRegistry,
+                                iIndices,
+                                dummyProcessBlockHelper,
+                                globalContext.processContext()->processConfiguration()->processName());
+    runBeginJobForModules(globalContext, *moduleRegistry_, *activityRegistry_, modulesThatFailed_);
   }
 
   //NOTE: When the Stream interfaces are propagated to the modules, this code must be updated
@@ -156,11 +181,25 @@ namespace edm {
     }
   }
 
-  void SecondaryEventProvider::beginStream(edm::StreamID iID, StreamContext& sContext) {
-    workerManager_.beginStream(iID, sContext);
+  void SecondaryEventProvider::beginStream(edm::StreamID iID, StreamContext const& sContext) {
+    //can reuse modulesThatFailed_ since we can't get here of failed in beginRun
+    runBeginStreamForModules(sContext, *moduleRegistry_, *activityRegistry_, modulesThatFailed_);
   }
 
-  void SecondaryEventProvider::endStream(edm::StreamID iID, StreamContext& sContext) {
-    workerManager_.endStream(iID, sContext);
+  void SecondaryEventProvider::endStream(edm::StreamID iID,
+                                         StreamContext const& sContext,
+                                         ExceptionCollector& exceptionCollector) {
+    // In this context the mutex is not needed because these things are not
+    // executing concurrently but in general the WorkerManager needs one.
+    std::mutex exceptionCollectorMutex;
+    //modulesThatFailed_ gets used in endJob and we can only get here if endJob succeeded
+    auto sentry = make_sentry(&modulesThatFailed_, [](auto* failed) { failed->clear(); });
+    runEndStreamForModules(
+        sContext, *moduleRegistry_, *activityRegistry_, exceptionCollector, exceptionCollectorMutex, modulesThatFailed_);
   }
+
+  void SecondaryEventProvider::endJob(ExceptionCollector& exceptionCollector, GlobalContext const& globalContext) {
+    runEndJobForModules(globalContext, *moduleRegistry_, *activityRegistry_, exceptionCollector, modulesThatFailed_);
+  }
+
 }  // namespace edm

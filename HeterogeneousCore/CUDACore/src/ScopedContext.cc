@@ -68,7 +68,7 @@ namespace cms::cuda {
 
   ////////////////////
 
-  ScopedContextAcquire::~ScopedContextAcquire() {
+  ScopedContextAcquire::~ScopedContextAcquire() noexcept(false) {
     holderHelper_.enqueueCallback(device(), stream());
     if (contextState_) {
       contextState_->set(device(), streamPtr());
@@ -89,8 +89,4 @@ namespace cms::cuda {
     // elsewhere as well.
     cudaEventRecord(event_.get(), stream());
   }
-
-  ////////////////////
-
-  ScopedContextTask::~ScopedContextTask() { holderHelper_.enqueueCallback(device(), stream()); }
 }  // namespace cms::cuda

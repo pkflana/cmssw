@@ -115,7 +115,7 @@ cond::Session cond::ConnectionPoolWrapper::createSession(const std::string& conn
 }
 
 cond::UntypedPayloadProxy::UntypedPayloadProxy() : m_session(), m_iov(), m_data(), m_buffer() {
-  m_data.reset(new pimpl);
+  m_data = std::make_shared<pimpl>();
   m_data->current.clear();
 }
 
@@ -426,7 +426,6 @@ struct invoker {
 
 int cond::TestGTPerf::execute() {
   std::string gtag = getOptionValue<std::string>("globaltag");
-  bool debug = hasDebug();
   std::string connect = getOptionValue<std::string>("connect");
   bool verbose = hasOptionValue("verbose");
 
@@ -606,8 +605,8 @@ int cond::TestGTPerf::execute() {
         std::cout << "for payload type name: " << payloadTypeName << std::endl;
       }
       timex.deserInt(p->getBufferSize());  // keep track of time vs. size
-    }                                      // single-thread
-    index++;                               // increment index into payloads
+    }  // single-thread
+    index++;  // increment index into payloads
   }
   std::cout << std::endl;
 
