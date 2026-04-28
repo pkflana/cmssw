@@ -114,4 +114,7 @@ CSCL1TPLookupTableEP = cms.ESSource(
         "L1Trigger/CSCTriggerPrimitives/data/GEMCSC/BendingAngle/SlopeAmendment_ME21_even_GEMlayer2.txt",
         "L1Trigger/CSCTriggerPrimitives/data/GEMCSC/BendingAngle/SlopeAmendment_ME21_odd_GEMlayer2.txt",
     ),
+    # GEM-CSC alignment corrections in 1/8-strip units (empty = no correction applied)
+    gemAlignCorrME11Files = cms.vstring(),
+    gemAlignCorrME21Files = cms.vstring(),
    )

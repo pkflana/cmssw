@@ -27,6 +27,21 @@ DEFINE_LUT(CSC_slope_corr_L1_ME21_odd);
 DEFINE_LUT(CSC_slope_corr_L2_ME21_even);
 DEFINE_LUT(CSC_slope_corr_L2_ME21_odd);
 
+void CSCL1TPLookupTableME21ILT::set_GEM_align_corr_es_ME21_positive_endcap(std::vector<int> lut) {
+  GEM_align_corr_es_ME21_positive_endcap_ = std::move(lut);
+}
+void CSCL1TPLookupTableME21ILT::set_GEM_align_corr_es_ME21_negative_endcap(std::vector<int> lut) {
+  GEM_align_corr_es_ME21_negative_endcap_ = std::move(lut);
+}
+int CSCL1TPLookupTableME21ILT::GEM_align_corr_es_ME21_positive_endcap(unsigned chamber, unsigned roll) const {
+  const unsigned idx = 16 * (chamber - 1) + (roll - 1);
+  return idx < GEM_align_corr_es_ME21_positive_endcap_.size() ? GEM_align_corr_es_ME21_positive_endcap_[idx] : 0;
+}
+int CSCL1TPLookupTableME21ILT::GEM_align_corr_es_ME21_negative_endcap(unsigned chamber, unsigned roll) const {
+  const unsigned idx = 16 * (chamber - 1) + (roll - 1);
+  return idx < GEM_align_corr_es_ME21_negative_endcap_.size() ? GEM_align_corr_es_ME21_negative_endcap_[idx] : 0;
+}
+
 unsigned CSCL1TPLookupTableME21ILT::es_diff_slope_bit_width() const {
   return CSCL1TPLookupTableUtils::get_common_lut_bit_width(
       {

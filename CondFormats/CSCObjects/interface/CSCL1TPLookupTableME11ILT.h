@@ -78,7 +78,17 @@ public:
 
   unsigned es_diff_slope_bit_width() const;
 
+  // GEM alignment corrections in 1/8-strip units, indexed by 8*(chamber-1)+(roll-1)
+  void set_GEM_align_corr_es_ME11_positive_endcap(std::vector<int> lut);
+  void set_GEM_align_corr_es_ME11_negative_endcap(std::vector<int> lut);
+  int GEM_align_corr_es_ME11_positive_endcap(unsigned chamber, unsigned roll) const;
+  int GEM_align_corr_es_ME11_negative_endcap(unsigned chamber, unsigned roll) const;
+
   COND_SERIALIZABLE;
+
+private:
+  std::vector<int> GEM_align_corr_es_ME11_positive_endcap_;
+  std::vector<int> GEM_align_corr_es_ME11_negative_endcap_;
 };
 
 #endif
