@@ -35,7 +35,8 @@ protected:
                       edm::ValidityInterval&) override;
 
 private:
-  std::vector<unsigned> load(std::string fileName) const;
+  template<typename T=unsigned>
+  std::vector<T> load(std::string fileName) const;
   const edm::ParameterSet pset_;
 };
 
@@ -188,6 +189,13 @@ std::unique_ptr<CSCL1TPLookupTableME11ILT> CSCL1TPLookupTableEP::produceME11ILT(
   lut->set_es_diff_slope_L2_ME11b_even(std::move(es_diff_slope_L2_ME11b_even_));
   lut->set_es_diff_slope_L2_ME11b_odd(std::move(es_diff_slope_L2_ME11b_odd_));
 
+  // GEM alignment corrections
+  const auto& gemAlignCorrME11Files_ = pset_.getParameter<std::vector<std::string>>("gemAlignCorrME11Files");
+  if (gemAlignCorrME11Files_.size() >= 2) {
+    lut->set_GEM_align_corr_es_ME11_positive_endcap(load<int>(gemAlignCorrME11Files_[0]));
+    lut->set_GEM_align_corr_es_ME11_negative_endcap(load<int>(gemAlignCorrME11Files_[1]));
+  }
+
   return lut;
 }
 
@@ -271,11 +279,19 @@ std::unique_ptr<CSCL1TPLookupTableME21ILT> CSCL1TPLookupTableEP::produceME21ILT(
   lut->set_CSC_slope_corr_L2_ME21_even(std::move(CSC_slope_corr_L2_ME21_even_));
   lut->set_CSC_slope_corr_L2_ME21_odd(std::move(CSC_slope_corr_L2_ME21_odd_));
 
+  // GEM alignment corrections
+  const auto& gemAlignCorrME21Files_ = pset_.getParameter<std::vector<std::string>>("gemAlignCorrME21Files");
+  if (gemAlignCorrME21Files_.size() >= 2) {
+    lut->set_GEM_align_corr_es_ME21_positive_endcap(load<int>(gemAlignCorrME21Files_[0]));
+    lut->set_GEM_align_corr_es_ME21_negative_endcap(load<int>(gemAlignCorrME21Files_[1]));
+  }
+
   return lut;
 }
 
-std::vector<unsigned> CSCL1TPLookupTableEP::load(std::string fileName) const {
-  std::vector<unsigned> returnV;
+template<typename T>
+std::vector<T> CSCL1TPLookupTableEP::load(std::string fileName) const {
+  std::vector<T> returnV;
   std::ifstream fstream;
   fstream.open(edm::FileInPath(fileName.c_str()).fullPath());
   // empty file, return empty lut
@@ -290,7 +306,7 @@ std::vector<unsigned> CSCL1TPLookupTableEP::load(std::string fileName) const {
     //ignore comments
     line.erase(std::find(line.begin(), line.end(), '#'), line.end());
     std::istringstream lineStream(line);
-    std::pair<unsigned, unsigned> entry;
+    std::pair<unsigned, T> entry;
     while (lineStream >> entry.first >> entry.second) {
       returnV.push_back(entry.second);
     }
