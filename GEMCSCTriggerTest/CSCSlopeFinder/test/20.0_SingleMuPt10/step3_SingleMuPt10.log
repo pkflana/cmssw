@@ -1,0 +1,15 @@
+RAW2DIGI,L1Reco,RECO,RECOSIM,PAT,VALIDATION:@standardValidationNoHLT+@miniAODValidation,DQM:@standardDQMFakeHLT+@miniAODDQM
+We have determined that this is simulation (if not, rerun cmsDriver.py with --data)
+entry file:step2.root
+Warning: The default GeometryRecoDB_cff is being used; however, the DB geometry is not applied. You may need to verify your cmsDriver.
+Step: RAW2DIGI Spec: 
+Step: L1Reco Spec: 
+Step: RECO Spec: 
+Step: RECOSIM Spec: 
+Step: PAT Spec: 
+Step: VALIDATION Spec: ['@standardValidationNoHLT', '@miniAODValidation']
+@standardValidationNoHLT+@miniAODValidation in preparing validation
+Step: DQM Spec: ['@standardDQMFakeHLT', '@miniAODDQM']
+customising the process with setCrossingFrameOn from SimGeneral/MixingModule/fullMixCustomize_cff
+customising the process with miniAOD_customizeAllMC from PhysicsTools/PatAlgos/slimming/miniAOD_tools
+Config file step3_RAW2DIGI_L1Reco_RECO_RECOSIM_PAT_VALIDATION_DQM.py created

@@ -1,0 +1,11 @@
+DIGI:pdigi_valid,L1,DIGI2RAW,HLT:@relval2022,ENDJOB
+We have determined that this is simulation (if not, rerun cmsDriver.py with --data)
+with DB:
+entry file:step1.root
+Step: DIGI Spec: ['pdigi_valid']
+Step: L1 Spec: 
+Step: DIGI2RAW Spec: 
+Step: HLT Spec: ['@relval2022']
+Step: ENDJOB Spec: 
+customising the process with customizeHLTforMC from HLTrigger/Configuration/customizeHLTforMC
+Config file step2_DIGI_L1_DIGI2RAW_HLT.py created

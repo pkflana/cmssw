@@ -1,0 +1,82 @@
+	--- egmGsfElectronIDs:heepElectronID-HEEPV70 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Summer16UL-ID-ISO-HZZ added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Summer17UL-ID-ISO-HZZ added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Summer18UL-ID-ISO-HZZ added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Winter22-HZZ-V1 added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-loose added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-medium added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Fall17-iso-V2-wp80 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Fall17-iso-V2-wp90 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Fall17-iso-V2-wpHZZ added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Fall17-iso-V2-wpLoose added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Fall17-noIso-V2-wp80 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Fall17-noIso-V2-wp90 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-Fall17-noIso-V2-wpLoose added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-RunIIIWinter22-V1-loose added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-RunIIIWinter22-V1-medium added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-RunIIIWinter22-V1-tight added to patElectrons
+	--- egmGsfElectronIDs:cutBasedElectronID-RunIIIWinter22-V1-veto added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-RunIIIWinter22-iso-V1-wp80 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-RunIIIWinter22-iso-V1-wp90 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-RunIIIWinter22-noIso-V1-wp80 added to patElectrons
+	--- egmGsfElectronIDs:mvaEleID-RunIIIWinter22-noIso-V1-wp90 added to patElectrons
+	--- egmPhotonIDs:cutBasedPhotonID-RunIIIWinter22-122X-V1-loose added to patPhotons
+	--- egmPhotonIDs:cutBasedPhotonID-RunIIIWinter22-122X-V1-medium added to patPhotons
+	--- egmPhotonIDs:cutBasedPhotonID-RunIIIWinter22-122X-V1-tight added to patPhotons
+	--- egmPhotonIDs:mvaPhoID-RunIIIWinter22-v1-wp80 added to patPhotons
+	--- egmPhotonIDs:mvaPhoID-RunIIIWinter22-v1-wp90 added to patPhotons
+	--- egmPhotonIDs:cutBasedPhotonID-Fall17-94X-V2-loose added to patPhotons
+	--- egmPhotonIDs:cutBasedPhotonID-Fall17-94X-V2-medium added to patPhotons
+	--- egmPhotonIDs:cutBasedPhotonID-Fall17-94X-V2-tight added to patPhotons
+	--- egmPhotonIDs:mvaPhoID-RunIIFall17-v2-wp80 added to patPhotons
+	--- egmPhotonIDs:mvaPhoID-RunIIFall17-v2-wp90 added to patPhotons
+RAW2DIGI,L1Reco,RECO,RECOSIM,PAT,NANO,VALIDATION:@standardValidationNoHLT+@miniAODValidation,DQM:@standardDQMFakeHLT+@miniAODDQM+@nanoAODDQM
+We have determined that this is simulation (if not, rerun cmsDriver.py with --data)
+with DB:
+entry file:step2.root
+Step: RAW2DIGI Spec: 
+Step: L1Reco Spec: 
+Step: RECO Spec: 
+Step: RECOSIM Spec: 
+Step: PAT Spec: 
+scheduling Flag_BadChargedCandidateFilter as part of PAT configuration
+scheduling Flag_BadChargedCandidateSummer16Filter as part of PAT configuration
+scheduling Flag_BadPFMuonDzFilter as part of PAT configuration
+scheduling Flag_BadPFMuonFilter as part of PAT configuration
+scheduling Flag_BadPFMuonSummer16Filter as part of PAT configuration
+scheduling Flag_CSCTightHalo2015Filter as part of PAT configuration
+scheduling Flag_CSCTightHaloFilter as part of PAT configuration
+scheduling Flag_CSCTightHaloTrkMuUnvetoFilter as part of PAT configuration
+scheduling Flag_EcalDeadCellBoundaryEnergyFilter as part of PAT configuration
+scheduling Flag_EcalDeadCellTriggerPrimitiveFilter as part of PAT configuration
+scheduling Flag_HBHENoiseFilter as part of PAT configuration
+scheduling Flag_HBHENoiseIsoFilter as part of PAT configuration
+scheduling Flag_HcalStripHaloFilter as part of PAT configuration
+scheduling Flag_chargedHadronTrackResolutionFilter as part of PAT configuration
+scheduling Flag_ecalBadCalibFilter as part of PAT configuration
+scheduling Flag_ecalLaserCorrFilter as part of PAT configuration
+scheduling Flag_eeBadScFilter as part of PAT configuration
+scheduling Flag_globalSuperTightHalo2016Filter as part of PAT configuration
+scheduling Flag_globalTightHalo2016Filter as part of PAT configuration
+scheduling Flag_goodVertices as part of PAT configuration
+scheduling Flag_hcalLaserEventFilter as part of PAT configuration
+scheduling Flag_hfNoisyHitsFilter as part of PAT configuration
+scheduling Flag_muonBadTrackFilter as part of PAT configuration
+scheduling Flag_trackingFailureFilter as part of PAT configuration
+scheduling Flag_trkPOGFilters as part of PAT configuration
+scheduling Flag_trkPOG_logErrorTooManyClusters as part of PAT configuration
+scheduling Flag_trkPOG_manystripclus53X as part of PAT configuration
+scheduling Flag_trkPOG_toomanystripclus53X as part of PAT configuration
+Step: NANO Spec: 
+in prepare_nano nanoSequenceMC
+nanoSequenceMC
+NANO: scheduling: nanoSequenceMC
+Step: VALIDATION Spec: ['@standardValidationNoHLT', '@miniAODValidation']
+@standardValidationNoHLT+@miniAODValidation in preparing validation
+Step: DQM Spec: ['@standardDQMFakeHLT', '@miniAODDQM', '@nanoAODDQM']
+customising the process with nanoAOD_customizeCommon from PhysicsTools/NanoAOD/nano_cff
+customising the process with setCrossingFrameOn from SimGeneral/MixingModule/fullMixCustomize_cff
+customising the process with miniAOD_customizeAllMC from Configuration/StandardSequences/PAT_cff
+Config file step3_RAW2DIGI_L1Reco_RECO_RECOSIM_PAT_NANO_VALIDATION_DQM.py created

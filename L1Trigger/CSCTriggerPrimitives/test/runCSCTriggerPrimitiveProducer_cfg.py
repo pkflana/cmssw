@@ -6,7 +6,7 @@ from CalibMuon.CSCCalibration.CSCCustomizeBendingAngle_cfi import set_6bit_gemcs
 from CalibMuon.CSCCalibration.CSCCustomizeGEMAlignment_cfi import set_gem_alignment_corrections
 
 options = VarParsing('analysis')
-options.register("unpack", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("unpack", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to unpack the CSC DAQ data.")
 options.register("selectCSCs", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to (un)select certain CSCs.")
@@ -14,11 +14,11 @@ options.register("maskedChambers", "", VarParsing.multiplicity.list, VarParsing.
                  "Chambers you want to explicitly mask.")
 options.register("selectedChambers", "", VarParsing.multiplicity.list, VarParsing.varType.string,
                  "Chambers you want to explicitly mask.")
-options.register("unpackGEM", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("unpackGEM", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to unpack the GEM DAQ data.")
-options.register("l1", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("l1", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to re-emulate the CSC trigger primitives.")
-options.register("l1GEM", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("l1GEM", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to re-emulate the GEM trigger primitives.")
 options.register("mc", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when running on MC.")
@@ -44,15 +44,15 @@ options.register('useB904GE11Long',False,VarParsing.multiplicity.singleton,VarPa
                  "Set to True when using data from GE1/1 Long super chamber in B904.")
 options.register("run3", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when using Run-3 data.")
-options.register("runCCLUTOTMB", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("runCCLUTOTMB", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when using the CCLUT OTMB algorithm.")
 options.register("runCCLUTTMB", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when using the CCLUT TMB algorithm.")
-options.register("runME11ILT", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("runME11ILT", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when running the GEM-CSC integrated local trigger algorithm in ME1/1.")
 options.register("runME21ILT", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when running the GEM-CSC integrated local trigger algorithm in ME2/1.")
-options.register("saveEdmOutput", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("saveEdmOutput", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True if you want to keep the EDM ROOT after unpacking and re-emulating.")
 options.register("preTriggerAnalysis", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True if you want to print out more details about CLCTs and LCTs in the offline CSC DQM module.")
@@ -60,7 +60,7 @@ options.register("dropNonMuonCollections", True, VarParsing.multiplicity.singlet
                  "Option to drop most non-muon collections generally considered unnecessary for GEM/CSC analysis")
 options.register("dqmOutputFile", "step_DQM.root", VarParsing.multiplicity.singleton, VarParsing.varType.string,
                  "Name of the DQM output file. Default: step_DQM.root")
-options.register("use6BitGEMCSCBendingAngle", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("use6BitGEMCSCBendingAngle", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True if you want to use 6 bit LUTs for the GEM-CSC bending angle in the CSCGEMMatcher.")
 options.register("useGEMAlignment", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True to apply GEM alignment corrections in the CSCGEMMatcher.")

@@ -1,0 +1,5 @@
+HARVESTING:validationHarvestingNoHLT+dqmHarvestingFakeHLT
+entry file:step3_inDQM.root
+Warning: The default GeometryRecoDB_cff is being used; however, the DB geometry is not applied. You may need to verify your cmsDriver.
+Step: HARVESTING Spec: ['validationHarvestingNoHLT', 'dqmHarvestingFakeHLT']
+Config file step4_HARVESTING.py created

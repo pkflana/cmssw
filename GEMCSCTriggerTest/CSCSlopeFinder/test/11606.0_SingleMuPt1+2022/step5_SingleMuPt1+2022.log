@@ -1,0 +1,7 @@
+ALCA:SiPixelCalSingleMuonLoose+SiPixelCalSingleMuonTight+TkAlMuonIsolated+TkAlMinBias+MuAlOverlaps+EcalESAlign+TkAlZMuMu+TkAlDiMuonAndVertex+HcalCalHBHEMuonProducerFilter+TkAlUpsilonMuMu+TkAlJpsiMuMu+SiStripCalMinBias,ENDJOB
+We have determined that this is real data (if not, rerun cmsDriver.py with --mc)
+with DB:
+entry file:step3.root
+Step: ALCA Spec: ['SiPixelCalSingleMuonLoose', 'SiPixelCalSingleMuonTight', 'TkAlMuonIsolated', 'TkAlMinBias', 'MuAlOverlaps', 'EcalESAlign', 'TkAlZMuMu', 'TkAlDiMuonAndVertex', 'HcalCalHBHEMuonProducerFilter', 'TkAlUpsilonMuMu', 'TkAlJpsiMuMu', 'SiStripCalMinBias']
+Step: ENDJOB Spec: 
+Config file step5_ALCA.py created

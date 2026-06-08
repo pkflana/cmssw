@@ -1,0 +1,11 @@
+DIGI:pdigi_valid,L1,DIGI2RAW,HLT:@fake,ENDJOB
+We have determined that this is simulation (if not, rerun cmsDriver.py with --data)
+entry file:step1.root
+Warning: The default GeometryRecoDB_cff is being used; however, the DB geometry is not applied. You may need to verify your cmsDriver.
+Step: DIGI Spec: ['pdigi_valid']
+Step: L1 Spec: 
+Step: DIGI2RAW Spec: 
+Step: HLT Spec: ['@fake']
+Step: ENDJOB Spec: 
+customising the process with customizeHLTforMC from HLTrigger/Configuration/customizeHLTforMC
+Config file step2_DIGI_L1_DIGI2RAW_HLT.py created
