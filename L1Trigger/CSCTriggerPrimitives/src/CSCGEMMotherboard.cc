@@ -580,6 +580,8 @@ void CSCGEMMotherboard::constructLCTsGEM(const CSCALCTDigi& alct,
   thisLCT.setStrip(clct.getKeyStrip());
   thisLCT.setBend(clct.getBend());
   thisLCT.setBX(alct.getBX());
+  thisLCT.setroll1(gem.roll1());
+  thisLCT.setroll2(gem.roll2());
 
   fillCCLUTInfo(thisLCT, &clct, &gem, lookupTableME11ILT, lookupTableME21ILT);
 }
@@ -618,6 +620,8 @@ void CSCGEMMotherboard::constructLCTsGEM(const CSCCLCTDigi& clct,
   thisLCT.setStrip(clct.getKeyStrip());
   thisLCT.setBend(clct.getBend());
   thisLCT.setBX(gem.bx());
+  thisLCT.setroll1(gem.roll1());
+  thisLCT.setroll2(gem.roll2());
   fillCCLUTInfo(thisLCT, &clct, &gem, lookupTableME11ILT, lookupTableME21ILT);
 }
 
@@ -636,6 +640,8 @@ void CSCGEMMotherboard::constructLCTsGEM(const CSCALCTDigi& alct,
   thisLCT.setStrip(gem.getKeyStrip());
   thisLCT.setBend(0);
   thisLCT.setBX(alct.getBX());
+  thisLCT.setroll1(gem.roll1());
+  thisLCT.setroll2(gem.roll2());
   fillCCLUTInfo(thisLCT, nullptr, &gem, nullptr, nullptr);
 }
 

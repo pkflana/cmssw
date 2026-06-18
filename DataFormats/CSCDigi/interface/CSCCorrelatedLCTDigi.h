@@ -204,6 +204,12 @@ public:
   /// set cscID
   void setCSCID(const uint16_t c) { cscID = c; }
 
+  /// set roll1
+  void setroll1(const uint16_t r) { roll1 = r; }
+
+  ///set roll2
+  void setroll2(const uint16_t r) { roll2 = r; }
+
   /// set high-multiplicity bits
   void setHMT(const uint16_t h);
 
@@ -228,6 +234,8 @@ public:
   const CSCCLCTDigi& getCLCT() const { return clct_; }
   const GEMPadDigi& getGEM1() const { return gem1_; }
   const GEMPadDigi& getGEM2() const { return gem2_; }
+  uint16_t getroll1() const { return roll1; }
+  uint16_t getroll2() const {return roll2; }
 
 private:
   // Note: The Run-3 data format is substantially different than the
@@ -264,7 +272,8 @@ private:
   uint16_t cscID;
 
   // new members in Run-3:
-
+  uint16_t roll1;
+  uint16_t roll2;
   // In Run-3, CSC trigger data will include the high-multiplicity
   // bits for a chamber. These bits may indicate the observation of
   // "exotic" events. This data member was included in a prototype.

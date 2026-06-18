@@ -93,6 +93,7 @@ struct LCTL1MuonMatcherEmulator
   int LCT_emu_slope;     int LCT_emu_bend;
   int LCT_emu_quality;   int LCT_emu_BX;
   int LCT_emu_eighthstrip; uint16_t LCT_emu_gemLayer;
+  int LCT_emu_roll1;    int LCT_emu_roll2;
 
   //============ LCT Prop =================//
   bool has_LCT_prop1;    bool has_LCT_prop2;
@@ -182,7 +183,7 @@ void LCTL1MuonMatcherEmulator::init()
   LCT_emu_slope = value; LCT_emu_bend = value;
   LCT_emu_quality = value; LCT_emu_BX = value;
   LCT_emu_eighthstrip = value; LCT_emu_gemLayer = value;
-
+  LCT_emu_roll1 = value; LCT_emu_roll2 = value;
   //============ LCT Prop =================//
   has_LCT_prop1 = false; has_LCT_prop2 = false;
   LCT_GE1_region = value;  LCT_GE2_region = value;
@@ -273,6 +274,7 @@ TTree* LCTL1MuonMatcherEmulator::book(TTree *t, const char *name){
   t->Branch("LCT_emu_quality", &LCT_emu_quality); t->Branch("LCT_emu_BX", &LCT_emu_BX);
   t->Branch("LCT_emu_eighthstrip", &LCT_emu_eighthstrip);
   t->Branch("LCT_emu_gemLayer", &LCT_emu_gemLayer);
+  t->Branch("LCT_emu_roll1", &LCT_emu_roll1); t->Branch("LCT_emu_roll2", &LCT_emu_roll2);
 
   //============ LCT Prop =================//
   t->Branch("has_LCT_prop1", &has_LCT_prop1); t->Branch("has_LCT_prop2", &has_LCT_prop2);
@@ -692,6 +694,8 @@ GEMCSCBendingAngleTesterEmulator::analyze(const edm::Event& iEvent, const edm::E
       data_.LCT_emu_quality = CSCCorrLCT->getQuality();
       data_.LCT_emu_bend = CSCCorrLCT->getBend();
       data_.LCT_emu_BX = CSCCorrLCT->getBX();
+      data_.LCT_emu_roll1 = CSCCorrLCT->getroll1();
+      data_.LCT_emu_roll2 = CSCCorrLCT->getroll2();
       data_.LCT_CSC_ME1a = (data_.LCT_emu_eighthstrip > 512) ? 1 : 0;
       data_.LCT_CSC_ME1b = (data_.LCT_emu_eighthstrip < 512) ? 1 : 0;
       data_.LCT_trknum = CSCCorrLCT->getTrknmb();

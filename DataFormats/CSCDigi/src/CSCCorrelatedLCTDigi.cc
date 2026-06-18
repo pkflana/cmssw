@@ -72,6 +72,8 @@ void CSCCorrelatedLCTDigi::clear() {
   syncErr = 0;
   cscID = 0;
   hmt = 0;
+  roll1 = 0;
+  roll2 = 0;
   version_ = Version::Legacy;
   // Run-3 variables
   run3_quart_strip_bit_ = false;

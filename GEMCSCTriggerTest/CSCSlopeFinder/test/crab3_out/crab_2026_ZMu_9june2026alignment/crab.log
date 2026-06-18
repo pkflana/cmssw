@@ -1,0 +1,279 @@
+DEBUG 2026-06-10 07:21:11.422 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-06-10 07:21:11.422 UTC: 	 Running on: Linux lxplus936.cern.ch 5.14.0-687.10.1.el9_8.x86_64 #1 SMP PREEMPT_DYNAMIC Mon May 18 15:13:25 EDT 2026 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-06-10 07:21:11.422 UTC: 	 Not using Singularity
+DEBUG 2026-06-10 07:21:11.422 UTC: 	 Operating System: Red Hat Enterprise Linux 9.8 (Plow)
+DEBUG 2026-06-10 07:21:11.422 UTC: 	 Executing command: 'submit'
+DEBUG 2026-06-10 07:21:11.423 UTC: 	 Found CRAB cache file /afs/cern.ch/user/p/pflanaga/.crab3
+INFO 2026-06-10 07:21:11.423 UTC: 	 Will use CRAB configuration file crab3_unpackAndMatchCSCGEM.py
+DEBUG 2026-06-10 07:21:11.423 UTC: 	 Loading CRAB configuration file.
+DEBUG 2026-06-10 07:21:11.426 UTC: 	 Will use CRAB plugin ANALYSIS (i.e. will run an analysis job type).
+DEBUG 2026-06-10 07:21:11.437 UTC: 	 Checking credentials
+DEBUG 2026-06-10 07:21:11.437 UTC: 	 Found proxy file /tmp/x509up_u148441
+DEBUG 2026-06-10 07:21:11.437 UTC: 	 Making sure it has proper VOMS extension
+DEBUG 2026-06-10 07:21:11.437 UTC: 	 Executing command :
+ voms-proxy-info --vo --file /tmp/x509up_u148441
+DEBUG 2026-06-10 07:21:11.477 UTC: 	 output : cms
+
+ error: 
+ retcode : 0
+DEBUG 2026-06-10 07:21:11.477 UTC: 	 Getting proxy life time left
+DEBUG 2026-06-10 07:21:11.477 UTC: 	 Executing command :
+ voms-proxy-info --actimeleft --timeleft --file /tmp/x509up_u148441
+DEBUG 2026-06-10 07:21:11.502 UTC: 	 output : 688981
+688980
+
+ error: 
+ retcode : 0
+DEBUG 2026-06-10 07:21:11.502 UTC: 	 Proxy valid for 191:23:00 hours
+DEBUG 2026-06-10 07:21:11.502 UTC: 	 Encoded data for curl request: subresource=delegatedn
+DEBUG 2026-06-10 07:21:11.568 UTC: 	 Registering user credentials on myproxy for /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+DEBUG 2026-06-10 07:21:11.568 UTC: 	 Executing command :
+ voms-proxy-info --identity --file /tmp/x509up_u148441
+DEBUG 2026-06-10 07:21:11.594 UTC: 	 output : /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=pflanaga/CN=858116/CN=Patrick Flanagan
+
+ error: 
+ retcode : 0
+DEBUG 2026-06-10 07:21:11.594 UTC: 	 Getting myproxy life time left for ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98
+DEBUG 2026-06-10 07:21:11.594 UTC: 	 Executing command :
+ myproxy-info -s myproxy.cern.ch -l ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98
+DEBUG 2026-06-10 07:21:11.893 UTC: 	 output : username: ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98
+owner: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=pflanaga/CN=858116/CN=Patrick Flanagan
+  renewal policy: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+  trusted retrieval policy: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+  timeleft: 352:41:33  (14.7 days)
+
+ error: 
+ retcode : 0
+DEBUG 2026-06-10 07:21:11.893 UTC: 	 Myproxy is valid: 1269660
+DEBUG 2026-06-10 07:21:11.893 UTC: 	 Executing command :
+ openssl x509 -noout -dates -in ~/.globus/usercert.pem
+DEBUG 2026-06-10 07:21:11.921 UTC: 	 output : notBefore=Jan 14 01:02:02 2026 GMT
+notAfter=Feb 18 01:02:02 2027 GMT
+
+ error: 
+ retcode : 0
+DEBUG 2026-06-10 07:21:11.930 UTC: 	 Delegating a myproxy for 720:00 hours
+DEBUG 2026-06-10 07:21:11.930 UTC: 	 Executing command :
+ export GT_PROXY_MODE=rfc ; myproxy-init -d -n -s myproxy.cern.ch -C ~/.globus/usercert.pem -y ~/.globus/userkey.pem -x -R '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1' -x -Z '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1' -l ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98 -t 168 -c 720:00
+DEBUG 2026-06-10 07:21:16.828 UTC: 	 output : Your identity: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=pflanaga/CN=858116/CN=Patrick Flanagan
+Creating proxy ...................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................... Done
+Proxy Verify OK
+Your proxy is valid until: Fri Jul 10 09:21:16 2026
+A proxy valid for 720 hours (30.0 days) for user ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98 now exists on myproxy.cern.ch.
+
+ error: 
+ retcode : 0
+DEBUG 2026-06-10 07:21:16.828 UTC: 	 Executing command :
+ myproxy-info -s myproxy.cern.ch -l ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98
+DEBUG 2026-06-10 07:21:17.099 UTC: 	 output : username: ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98
+owner: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=pflanaga/CN=858116/CN=Patrick Flanagan
+  renewal policy: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+  trusted retrieval policy: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+  timeleft: 719:59:59  (30.0 days)
+
+ error: 
+ retcode : 0
+DEBUG 2026-06-10 07:21:17.100 UTC: 	 My-proxy delegated.
+DEBUG 2026-06-10 07:21:17.100 UTC: 	 Result of myproxy credential check:
+  Credential exists on myproxy: username: ced2d2a33dc4b3ac8c18a230fe47c4deb6b5ce98  - validity: 29 days, 23:59:00
+DEBUG 2026-06-10 07:21:17.100 UTC: 	 Command use: submit
+DEBUG 2026-06-10 07:21:17.100 UTC: 	 Options use: ['crab3_unpackAndMatchCSCGEM.py']
+DEBUG 2026-06-10 07:21:17.100 UTC: 	 Encoded data for curl request: subresource=version
+DEBUG 2026-06-10 07:21:17.143 UTC: 	 CRABClient version: v3.251020
+DEBUG 2026-06-10 07:21:17.143 UTC: 	 Instance is prod
+DEBUG 2026-06-10 07:21:17.143 UTC: 	 Server base url is cmsweb.cern.ch
+DEBUG 2026-06-10 07:21:17.143 UTC: 	 Command api workflow
+DEBUG 2026-06-10 07:21:17.143 UTC: 	 Started submission
+DEBUG 2026-06-10 07:21:17.143 UTC: 	 Working on /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment
+DEBUG 2026-06-10 07:21:17.175 UTC: 	 Loading required information from the environment
+DEBUG 2026-06-10 07:21:17.175 UTC: 	 Found CMSSW_16_1_0 for el9_amd64_gcc13 with base /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0
+DEBUG 2026-06-10 07:21:17.175 UTC: 	 Loading required information from the environment
+DEBUG 2026-06-10 07:21:17.175 UTC: 	 Found CMSSW_16_1_0 for el9_amd64_gcc13 with base /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0
+DEBUG 2026-06-10 07:21:17.175 UTC: 	 UNIQUE NAME: tarUUID 49244f04-6852-4f1a-99c2-7bb580d60010 
+DEBUG 2026-06-10 07:21:17.175 UTC: 	 self.config: from WMCore.Configuration import Configuration
+config = Configuration()
+config.section_('General')
+config.General.transferLogs = True
+config.General.workArea = 'crab3_out'
+config.General.transferOutputs = True
+config.General.requestName = '2026_ZMu_9june2026alignment'
+config.section_('JobType')
+config.JobType.psetName = 'run_unpack_CSCGEM_matcher.py'
+config.JobType.numCores = 1
+config.JobType.allowUndistributedCMSSW = True
+config.JobType.maxJobRuntimeMin = 420
+config.JobType.pluginName = 'Analysis'
+config.section_('Data')
+config.Data.splitting = 'FileBased'
+config.Data.outputDatasetTag = '2026_ZMu_9june2026alignment'
+config.Data.inputDBS = 'global'
+config.Data.inputDataset = '/Muon0/Run2026D-ZMu-PromptReco-v1/RAW-RECO'
+config.Data.outLFNDirBase = '/store/user/pflanaga/GEMCSCTrigger/2026_ZMu/'
+config.Data.publication = False
+config.Data.unitsPerJob = 1
+config.section_('Site')
+config.Site.ignoreGlobalBlacklist = True
+config.Site.storageSite = 'T3_CH_CERNBOX'
+config.section_('User')
+config.section_('Debug')
+
+DEBUG 2026-06-10 07:21:17.175 UTC: 	 self.config.JobType.psetName: run_unpack_CSCGEM_matcher.py
+INFO 2026-06-10 07:21:17.176 UTC: 	 Importing CMSSW configuration run_unpack_CSCGEM_matcher.py
+INFO 2026-06-10 07:21:18.696 UTC: 	 Finished importing CMSSW configuration run_unpack_CSCGEM_matcher.py
+DEBUG 2026-06-10 07:21:18.696 UTC: 	 Writing CMSSW configuration to /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/PSet.py
+DEBUG 2026-06-10 07:21:18.791 UTC: 	 The following EDM output files will be collected: []
+DEBUG 2026-06-10 07:21:18.791 UTC: 	 The following TFile output files will be collected: ['output.root']
+DEBUG 2026-06-10 07:21:18.791 UTC: 	 The following user output files (not listed as PoolOuputModule or TFileService in the CMSSW PSet) will be collected: 
+DEBUG 2026-06-10 07:21:18.791 UTC: 	 Loading required information from the environment
+DEBUG 2026-06-10 07:21:18.791 UTC: 	 Found CMSSW_16_1_0 for el9_amd64_gcc13 with base /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0
+DEBUG 2026-06-10 07:21:18.791 UTC: 	 Making tarball in /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/49244f04-6852-4f1a-99c2-7bb580d60010default.tgz
+DEBUG 2026-06-10 07:21:18.795 UTC: 	 Checking directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/bin
+DEBUG 2026-06-10 07:21:18.795 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/bin to tarball
+DEBUG 2026-06-10 07:21:18.824 UTC: 	 Checking directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/python
+DEBUG 2026-06-10 07:21:18.824 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/python to tarball
+DEBUG 2026-06-10 07:21:21.276 UTC: 	 Checking directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/cfipython
+DEBUG 2026-06-10 07:21:21.276 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/cfipython to tarball
+DEBUG 2026-06-10 07:21:37.938 UTC: 	 Checking directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/lib
+DEBUG 2026-06-10 07:21:37.938 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/lib to tarball
+DEBUG 2026-06-10 07:21:45.921 UTC: 	 Checking directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/biglib
+DEBUG 2026-06-10 07:21:45.921 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/biglib to tarball
+DEBUG 2026-06-10 07:21:45.929 UTC: 	 Checking directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/module
+DEBUG 2026-06-10 07:21:45.930 UTC: 	 Checking directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/config/SCRAM/hooks
+DEBUG 2026-06-10 07:21:45.934 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/config/SCRAM/hooks to tarball
+DEBUG 2026-06-10 07:21:47.369 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/CalibMuon/CSCCalibration/interface to tarball
+DEBUG 2026-06-10 07:21:48.203 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/CalibMuon/CSCCalibration/python to tarball
+DEBUG 2026-06-10 07:21:49.045 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/CondFormats/CSCObjects/data to tarball
+DEBUG 2026-06-10 07:21:49.205 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/CondFormats/CSCObjects/interface to tarball
+DEBUG 2026-06-10 07:21:50.349 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQM/CSCMonitorModule/data to tarball
+DEBUG 2026-06-10 07:21:50.922 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQM/CSCMonitorModule/python to tarball
+DEBUG 2026-06-10 07:21:51.818 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQM/L1TMonitor/interface to tarball
+DEBUG 2026-06-10 07:21:53.532 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQM/L1TMonitor/python to tarball
+DEBUG 2026-06-10 07:21:56.113 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQMOffline/JetMET/interface to tarball
+DEBUG 2026-06-10 07:21:56.484 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQMOffline/JetMET/python to tarball
+DEBUG 2026-06-10 07:21:57.402 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQMOffline/Muon/data to tarball
+DEBUG 2026-06-10 07:21:57.442 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQMOffline/Muon/interface to tarball
+DEBUG 2026-06-10 07:21:58.037 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DQMOffline/Muon/python to tarball
+DEBUG 2026-06-10 07:21:59.131 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DataFormats/CSCDigi/interface to tarball
+DEBUG 2026-06-10 07:22:00.166 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DataFormats/L1CSCTrackFinder/interface to tarball
+DEBUG 2026-06-10 07:22:00.493 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DataFormats/L1TCorrelator/interface to tarball
+DEBUG 2026-06-10 07:22:01.108 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/DataFormats/L1TMuon/interface to tarball
+DEBUG 2026-06-10 07:22:01.820 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/EventFilter/CSCRawToDigi/interface to tarball
+DEBUG 2026-06-10 07:22:03.056 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/EventFilter/CSCRawToDigi/python to tarball
+DEBUG 2026-06-10 07:22:03.240 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/EventFilter/CSCTFRawToDigi/interface to tarball
+DEBUG 2026-06-10 07:22:03.264 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/EventFilter/CSCTFRawToDigi/python to tarball
+DEBUG 2026-06-10 07:22:03.321 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/EventFilter/L1TRawToDigi/interface to tarball
+DEBUG 2026-06-10 07:22:03.809 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/EventFilter/L1TRawToDigi/python to tarball
+DEBUG 2026-06-10 07:22:05.115 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/HLTrigger/special/python to tarball
+DEBUG 2026-06-10 07:22:05.275 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/CSCTrackFinder/interface to tarball
+DEBUG 2026-06-10 07:22:05.588 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/CSCTrackFinder/python to tarball
+DEBUG 2026-06-10 07:22:05.811 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/CSCTriggerPrimitives/data to tarball
+DEBUG 2026-06-10 07:22:12.136 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/CSCTriggerPrimitives/interface to tarball
+DEBUG 2026-06-10 07:22:12.791 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/CSCTriggerPrimitives/python to tarball
+DEBUG 2026-06-10 07:22:13.001 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/Configuration/python to tarball
+DEBUG 2026-06-10 07:22:15.372 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/DTTrackFinder/interface to tarball
+DEBUG 2026-06-10 07:22:15.559 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/DTTrackFinder/python to tarball
+DEBUG 2026-06-10 07:22:15.599 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/HardwareValidation/interface to tarball
+DEBUG 2026-06-10 07:22:15.703 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/HardwareValidation/python to tarball
+DEBUG 2026-06-10 07:22:15.878 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuon/data to tarball
+DEBUG 2026-06-10 07:22:15.908 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuon/interface to tarball
+DEBUG 2026-06-10 07:22:16.784 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuon/python to tarball
+DEBUG 2026-06-10 07:22:17.218 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonBarrel/interface to tarball
+DEBUG 2026-06-10 07:22:17.612 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonBarrel/python to tarball
+DEBUG 2026-06-10 07:22:17.855 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonCPPF/interface to tarball
+DEBUG 2026-06-10 07:22:17.902 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonCPPF/python to tarball
+DEBUG 2026-06-10 07:22:18.077 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonEndCap/interface to tarball
+DEBUG 2026-06-10 07:22:19.178 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonEndCap/python to tarball
+DEBUG 2026-06-10 07:22:19.557 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonEndCapPhase2/interface to tarball
+DEBUG 2026-06-10 07:22:20.988 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonEndCapPhase2/python to tarball
+DEBUG 2026-06-10 07:22:21.145 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonOverlap/interface to tarball
+DEBUG 2026-06-10 07:22:21.693 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonOverlap/python to tarball
+DEBUG 2026-06-10 07:22:21.783 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonOverlapPhase1/interface to tarball
+DEBUG 2026-06-10 07:22:22.919 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonOverlapPhase1/python to tarball
+DEBUG 2026-06-10 07:22:23.054 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonOverlapPhase2/interface to tarball
+DEBUG 2026-06-10 07:22:23.268 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TMuonOverlapPhase2/python to tarball
+DEBUG 2026-06-10 07:22:23.362 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TNtuples/interface to tarball
+DEBUG 2026-06-10 07:22:24.951 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/L1TNtuples/python to tarball
+DEBUG 2026-06-10 07:22:26.401 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/Phase2L1GMT/data to tarball
+DEBUG 2026-06-10 07:22:26.428 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/Phase2L1GMT/interface to tarball
+DEBUG 2026-06-10 07:22:26.934 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/L1Trigger/Phase2L1GMT/python to tarball
+DEBUG 2026-06-10 07:22:27.276 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/RecoMET/METAlgorithms/interface to tarball
+DEBUG 2026-06-10 07:22:27.893 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/RecoMET/METProducers/interface to tarball
+DEBUG 2026-06-10 07:22:28.273 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/RecoMET/METProducers/python to tarball
+DEBUG 2026-06-10 07:22:28.929 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/RecoMuon/TrackerSeedGenerator/interface to tarball
+DEBUG 2026-06-10 07:22:29.203 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/RecoMuon/TrackerSeedGenerator/python to tarball
+DEBUG 2026-06-10 07:22:30.160 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/Validation/MuonCSCDigis/data to tarball
+DEBUG 2026-06-10 07:22:30.202 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/Validation/MuonCSCDigis/interface to tarball
+DEBUG 2026-06-10 07:22:30.523 UTC: 	 Adding directory /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/Validation/MuonCSCDigis/python to tarball
+DEBUG 2026-06-10 07:22:30.896 UTC: 	 Uploading archive /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/49244f04-6852-4f1a-99c2-7bb580d60010default.tgz (17 MB) to the CRAB cache.
+DEBUG 2026-06-10 07:22:34.923 UTC: 	 Encoded data for curl request: subresource=upload&objecttype=sandbox&tarballname=7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz
+DEBUG 2026-06-10 07:22:35.109 UTC: 	 Will execute:
+curl -f -v -X POST  -H "User-Agent: CRAB" -F "key=pflanaga/sandboxes/7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz" -F "AWSAccessKeyId=715203df6482458ba839e73e6dab634b" -F "policy=eyJleHBpcmF0aW9uIjogIjIwMjYtMDYtMTBUMDg6MjI6MzVaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiY3JhYmNhY2hlX3Byb2QifSwgeyJrZXkiOiAicGZsYW5hZ2Evc2FuZGJveGVzLzdiYjE4Zjg4MjNlYmY5ZDdjYmM1NzdiOWE3YzJmNTUyOWZjYzUzNjAzYmFkZmQ0NWRmZjcxNGIzYjczYmYwYWQudGFyLmd6In1dfQ==" -F "signature=KBD4vBHVHjkMwXthta+hc0gJImQ=" -F "file=@/eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/49244f04-6852-4f1a-99c2-7bb580d60010default.tgz" "https://s3.cern.ch/crabcache_prod"
+DEBUG 2026-06-10 07:22:36.556 UTC: 	 exitcode: 0
+stdout: b''
+DEBUG 2026-06-10 07:22:36.556 UTC: 	 upload to S3 of sandbox /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/49244f04-6852-4f1a-99c2-7bb580d60010default.tgz completed
+DEBUG 2026-06-10 07:22:36.556 UTC: 	 make sure that object is ready for retrieve
+DEBUG 2026-06-10 07:22:37.558 UTC: 	 Encoded data for curl request: subresource=download&objecttype=sandbox&tarballname=7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz&clientmethod=head_object
+DEBUG 2026-06-10 07:22:37.606 UTC: 	 PreSignedUrl to download sandbox received OK
+DEBUG 2026-06-10 07:22:37.609 UTC: 	 Will execute:
+ curl -v -s -f -o /dev/null --head  "https://s3.cern.ch/crabcache_prod/pflanaga/sandboxes/7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz?AWSAccessKeyId=715203df6482458ba839e73e6dab634b&Signature=yAY%2F%2F5S4%2BXpcjDflF%2BdVb5TLCqI%3D&Expires=1781079757"
+DEBUG 2026-06-10 07:22:37.640 UTC: 	 exitcode: 0
+stdout: b''
+DEBUG 2026-06-10 07:22:37.640 UTC: 	 sandbox /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/49244f04-6852-4f1a-99c2-7bb580d60010default.tgz successfully uploaded to S3
+DEBUG 2026-06-10 07:22:37.640 UTC: 	 Loading required information from the environment
+DEBUG 2026-06-10 07:22:37.640 UTC: 	 Found CMSSW_16_1_0 for el9_amd64_gcc13 with base /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0
+DEBUG 2026-06-10 07:22:37.640 UTC: 	 Making tarball in /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/debugFiles.tgz
+DEBUG 2026-06-10 07:22:37.652 UTC: 	 Uploading archive /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/debugFiles.tgz (5 KB) to the CRAB cache.
+DEBUG 2026-06-10 07:22:37.658 UTC: 	 Encoded data for curl request: subresource=upload&objecttype=sandbox&tarballname=621dc79013d860c19755e35ea989c89013bfabda5ce9e14301befe0657133596.tar.gz
+DEBUG 2026-06-10 07:22:37.716 UTC: 	 Will execute:
+curl -f -v -X POST  -H "User-Agent: CRAB" -F "key=pflanaga/sandboxes/621dc79013d860c19755e35ea989c89013bfabda5ce9e14301befe0657133596.tar.gz" -F "AWSAccessKeyId=715203df6482458ba839e73e6dab634b" -F "policy=eyJleHBpcmF0aW9uIjogIjIwMjYtMDYtMTBUMDg6MjI6MzdaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiY3JhYmNhY2hlX3Byb2QifSwgeyJrZXkiOiAicGZsYW5hZ2Evc2FuZGJveGVzLzYyMWRjNzkwMTNkODYwYzE5NzU1ZTM1ZWE5ODljODkwMTNiZmFiZGE1Y2U5ZTE0MzAxYmVmZTA2NTcxMzM1OTYudGFyLmd6In1dfQ==" -F "signature=5OGVuMUJDvvrMC61AlakmubE5ms=" -F "file=@/eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/debugFiles.tgz" "https://s3.cern.ch/crabcache_prod"
+DEBUG 2026-06-10 07:22:37.756 UTC: 	 exitcode: 0
+stdout: b''
+DEBUG 2026-06-10 07:22:37.756 UTC: 	 upload to S3 of sandbox /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/debugFiles.tgz completed
+DEBUG 2026-06-10 07:22:37.756 UTC: 	 make sure that object is ready for retrieve
+DEBUG 2026-06-10 07:22:38.757 UTC: 	 Encoded data for curl request: subresource=download&objecttype=sandbox&tarballname=621dc79013d860c19755e35ea989c89013bfabda5ce9e14301befe0657133596.tar.gz&clientmethod=head_object
+DEBUG 2026-06-10 07:22:38.803 UTC: 	 PreSignedUrl to download sandbox received OK
+DEBUG 2026-06-10 07:22:38.806 UTC: 	 Will execute:
+ curl -v -s -f -o /dev/null --head  "https://s3.cern.ch/crabcache_prod/pflanaga/sandboxes/621dc79013d860c19755e35ea989c89013bfabda5ce9e14301befe0657133596.tar.gz?AWSAccessKeyId=715203df6482458ba839e73e6dab634b&Signature=2Q5SdQg9FrxDbxeGniXve7vVCzA%3D&Expires=1781079758"
+DEBUG 2026-06-10 07:22:38.836 UTC: 	 exitcode: 0
+stdout: b''
+DEBUG 2026-06-10 07:22:38.836 UTC: 	 sandbox /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/inputs/debugFiles.tgz successfully uploaded to S3
+DEBUG 2026-06-10 07:22:38.836 UTC: 	 Result uploading input files: 7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz 
+DEBUG 2026-06-10 07:22:38.837 UTC: 	 submit() - self.configuration from WMCore.Configuration import Configuration
+config = Configuration()
+config.section_('General')
+config.General.transferLogs = True
+config.General.workArea = 'crab3_out'
+config.General.transferOutputs = True
+config.General.requestName = '2026_ZMu_9june2026alignment'
+config.section_('JobType')
+config.JobType.psetName = 'run_unpack_CSCGEM_matcher.py'
+config.JobType.numCores = 1
+config.JobType.allowUndistributedCMSSW = True
+config.JobType.maxJobRuntimeMin = 420
+config.JobType.pluginName = 'Analysis'
+config.section_('Data')
+config.Data.splitting = 'FileBased'
+config.Data.outputDatasetTag = '2026_ZMu_9june2026alignment'
+config.Data.inputDBS = 'global'
+config.Data.inputDataset = '/Muon0/Run2026D-ZMu-PromptReco-v1/RAW-RECO'
+config.Data.outLFNDirBase = '/store/user/pflanaga/GEMCSCTrigger/2026_ZMu/'
+config.Data.publication = False
+config.Data.unitsPerJob = 1
+config.section_('Site')
+config.Site.ignoreGlobalBlacklist = True
+config.Site.storageSite = 'T3_CH_CERNBOX'
+config.section_('User')
+config.section_('Debug')
+
+DEBUG 2026-06-10 07:22:38.837 UTC: 	 submit() - self.configreq {'dryrun': 0, 'workflow': 'crab_2026_ZMu_9june2026alignment', 'saveoutput': 1, 'savelogsflag': 1, 'inputdata': '/Muon0/Run2026D-ZMu-PromptReco-v1/RAW-RECO', 'nonvaliddata': 0, 'userfiles': [], 'dbsurl': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader', 'useparent': 0, 'ignorelocality': 0, 'splitalgo': 'FileBased', 'algoargs': 1, 'totalunits': 0, 'lfn': '/store/user/pflanaga/GEMCSCTrigger/2026_ZMu/', 'publication': 0, 'publishdbsurl': 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter', 'publishname2': '2026_ZMu_9june2026alignment', 'jobtype': 'Analysis', 'generator': 'pythia', 'addoutputfiles': [], 'maxjobruntime': 420, 'numcores': 1, 'maxmemory': 2000, 'priority': 10, 'nonprodsw': 1, 'asyncdest': 'T3_CH_CERNBOX', 'requireaccelerator': 0, 'oneEventMode': 0, 'extrajdl': [], 'ignoreglobalblacklist': 1, 'partialdataset': 0, 'inputblocks': []}
+DEBUG 2026-06-10 07:22:38.837 UTC: 	 submit() - jobconfig {'addoutputfiles': [], 'tfileoutfiles': ['output.root'], 'edmoutfiles': [], 'jobarch': 'el9_amd64_gcc13', 'jobminuarch': 'x86-64-v3', 'jobsw': 'CMSSW_16_1_0', 'inputdata': '/Muon0/Run2026D-ZMu-PromptReco-v1/RAW-RECO', 'cachefilename': '7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz', 'debugfilename': '621dc79013d860c19755e35ea989c89013bfabda5ce9e14301befe0657133596.tar.gz', 'jobtype': 'Analysis'}
+INFO 2026-06-10 07:22:38.837 UTC: 	 Sending the request to the server at cmsweb.cern.ch
+DEBUG 2026-06-10 07:22:38.837 UTC: 	 Submitting {'dryrun': 0, 'workflow': 'crab_2026_ZMu_9june2026alignment', 'saveoutput': 1, 'savelogsflag': 1, 'inputdata': '/Muon0/Run2026D-ZMu-PromptReco-v1/RAW-RECO', 'nonvaliddata': 0, 'userfiles': [], 'dbsurl': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader', 'useparent': 0, 'ignorelocality': 0, 'splitalgo': 'FileBased', 'algoargs': 1, 'totalunits': 0, 'lfn': '/store/user/pflanaga/GEMCSCTrigger/2026_ZMu/', 'publication': 0, 'publishdbsurl': 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter', 'publishname2': '2026_ZMu_9june2026alignment', 'jobtype': 'Analysis', 'generator': 'pythia', 'addoutputfiles': [], 'maxjobruntime': 420, 'numcores': 1, 'maxmemory': 2000, 'priority': 10, 'nonprodsw': 1, 'asyncdest': 'T3_CH_CERNBOX', 'requireaccelerator': 0, 'oneEventMode': 0, 'extrajdl': [], 'ignoreglobalblacklist': 1, 'partialdataset': 0, 'inputblocks': [], 'tfileoutfiles': ['output.root'], 'edmoutfiles': [], 'jobarch': 'el9_amd64_gcc13', 'jobminuarch': 'x86-64-v3', 'jobsw': 'CMSSW_16_1_0', 'cachefilename': '7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz', 'debugfilename': '621dc79013d860c19755e35ea989c89013bfabda5ce9e14301befe0657133596.tar.gz'} 
+DEBUG 2026-06-10 07:22:38.837 UTC: 	 Encoded data for curl request: dryrun=0&workflow=crab_2026_ZMu_9june2026alignment&saveoutput=1&savelogsflag=1&inputdata=%2FMuon0%2FRun2026D-ZMu-PromptReco-v1%2FRAW-RECO&nonvaliddata=0&dbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fglobal%2FDBSReader&useparent=0&ignorelocality=0&splitalgo=FileBased&algoargs=1&totalunits=0&lfn=%2Fstore%2Fuser%2Fpflanaga%2FGEMCSCTrigger%2F2026_ZMu%2F&publication=0&publishdbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fphys03%2FDBSWriter&publishname2=2026_ZMu_9june2026alignment&jobtype=Analysis&generator=pythia&maxjobruntime=420&numcores=1&maxmemory=2000&priority=10&nonprodsw=1&asyncdest=T3_CH_CERNBOX&requireaccelerator=0&oneEventMode=0&ignoreglobalblacklist=1&partialdataset=0&jobarch=el9_amd64_gcc13&jobminuarch=x86-64-v3&jobsw=CMSSW_16_1_0&cachefilename=7bb18f8823ebf9d7cbc577b9a7c2f5529fcc53603badfd45dff714b3b73bf0ad.tar.gz&debugfilename=621dc79013d860c19755e35ea989c89013bfabda5ce9e14301befe0657133596.tar.gz&tfileoutfiles=output.root
+DEBUG 2026-06-10 07:22:38.889 UTC: 	 Result: {'result': [{'RequestName': '260610_072238:pflanaga_crab_2026_ZMu_9june2026alignment'}]}
+INFO 2026-06-10 07:22:38.927 UTC: 	 Success: Your task has been delivered to the prod CRAB3 server.
+INFO 2026-06-10 07:22:38.927 UTC: 	 Task name: 260610_072238:pflanaga_crab_2026_ZMu_9june2026alignment
+INFO 2026-06-10 07:22:38.927 UTC: 	 Project dir: crab3_out/crab_2026_ZMu_9june2026alignment
+INFO 2026-06-10 07:22:38.927 UTC: 	 Please use ' crab status -d crab3_out/crab_2026_ZMu_9june2026alignment ' to check how the submission process proceeds.
+DEBUG 2026-06-10 07:22:38.927 UTC: 	 About to return
+INFO 2026-06-10 07:22:38.947 UTC: 	 Log file is /eos/home-p/pflanaga/cmssw_clean/CMSSW_16_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/crab3_out/crab_2026_ZMu_9june2026alignment/crab.log

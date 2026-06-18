@@ -9,8 +9,8 @@ import os
 # event = f.Get("GEMCSCBendingAngleTester/OnlyRecos") #All LCTs but only ones matched to a reco track (should be faster for eff study)
 
 # files = ["/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_16may2025noalignment/260516_192445/"+folder+"/"+file for folder in os.listdir("/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_16may2025noalignment/260516_192445/") for file in os.listdir("/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_16may2025noalignment/260516_192445/"+folder) if file.find('log')==-1]
-files = ["/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_18may2025alignment/260519_001457/"+folder+"/"+file for folder in os.listdir("/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_18may2025alignment/260519_001457/") for file in os.listdir("/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_18may2025alignment/260519_001457/"+folder) if file.find('log')==-1]
-
+# files = ["/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_18may2025alignment/260519_001457/"+folder+"/"+file for folder in os.listdir("/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_18may2025alignment/260519_001457/") for file in os.listdir("/eos/user/p/pflanaga/GEMCSCTrigger/2026_ZMu/Muon0/2026_ZMu_18may2025alignment/260519_001457/"+folder) if file.find('log')==-1]
+files = ["/eos/user/p/pflanaga/singlemu_rerun16june2026/"+folder+"/output.root" for folder in os.listdir("/eos/user/p/pflanaga/singlemu_rerun16june2026/")]
 
 ROOT.gROOT.SetBatch(1)
 
@@ -23,14 +23,14 @@ if not os.path.exists("plots/"):
   os.makedirs("plots/")
 
 
-plotdir = "plots/alignment_both_aligned/"
+plotdir = "plots/alignment_both_unaligned_simulation/"
 if not os.path.exists(plotdir):
   os.makedirs(plotdir)
 
 mode_cut = f"((emtftrack_mode == 11) | (emtftrack_mode == 13) | (emtftrack_mode == 14) | (emtftrack_mode == 15))"
-base_cut = "has_emtf_track_match & (LCT_emu_quality > 3) & (LCT_emu_gemLayer == 1)"
+base_cut = "has_emtf_track_match"# & (LCT_emu_quality > 3) & (LCT_emu_gemLayer == 1)"
 cut = f"{base_cut}  & {mode_cut}"
-cut = cut + " & (l1muon_match_pt>40) & (l1muon_match_pt<80)"
+cut = cut + " & (l1muon_match_pt>30) & (l1muon_match_pt<80)"
 # cut = cut + " & (l1muon_match_charge==-1)"
 # cut = cut + " & (LCT_CSC_ME1b == 1)"
 cut = cut + " & (LCT_emu_eighthstrip < 512)"

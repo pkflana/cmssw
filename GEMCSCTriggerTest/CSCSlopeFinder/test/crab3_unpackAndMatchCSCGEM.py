@@ -5,7 +5,7 @@ config = config()
 #section general
 
 
-config.General.requestName = '2026_ZMu_18may2025alignment' #'2024G_ZeroBias_22Aug2024' #'2024E_Muon0_Zmu_28June2024'
+config.General.requestName = '2026_ZMu_9june2026alignment' #'2024G_ZeroBias_22Aug2024' #'2024E_Muon0_Zmu_28June2024'
 config.General.workArea = 'crab3_out' #'2024G_ZeroBias_22Aug2024'#working dir
 
 #config.General.requestName = '2024_ZeroBias_31Mar2025'

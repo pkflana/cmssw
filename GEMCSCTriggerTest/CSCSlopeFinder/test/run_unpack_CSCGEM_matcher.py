@@ -20,7 +20,7 @@ options.register("l1", True, VarParsing.multiplicity.singleton, VarParsing.varTy
                  "Set to True when you want to re-emulate the CSC trigger primitives.")
 options.register("l1GEM", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to re-emulate the GEM trigger primitives.")
-options.register("mc", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("mc", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when running on MC.")
 options.register("dqm", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to run the CSC DQM")
@@ -209,7 +209,10 @@ if options.l1:
             l1csc.CSCWireDigiProducer = "muonCSCDigis:MuonCSCWireDigi"
             ## GEM-CSC trigger enabled
             if options.runME11ILT or options.runME21ILT:
-                  l1csc.GEMPadDigiClusterProducer = "muonCSCDigis:MuonGEMPadDigiCluster"
+                  if options.mc:
+                        l1csc.GEMPadDigiClusterProducer = "simMuonGEMPadDigiClusters"
+                  else:
+                        l1csc.GEMPadDigiClusterProducer = "muonCSCDigis:MuonGEMPadDigiCluster"
 
 if options.l1GEM:
       if options.mc:
@@ -343,12 +346,14 @@ if options.unpackGEM:
             process.unpacksequence += process.emtfStage2Digis
 process.p1 = cms.Path(process.unpacksequence)
 
+
 process.l1sequence = cms.Sequence(l1csc)
 if options.l1GEM:
       ## not sure if append would work for the GEM-CSC trigger
       ## maybe the modules need to come first
       process.l1sequence += process.simMuonGEMPadDigis
       process.l1sequence += process.simMuonGEMPadDigiClusters
+# process.l1sequence += l1csc
 process.p2 = cms.Path(process.l1sequence)
 
 process.dqmsequence = cms.Sequence(process.l1tdeCSCTPG)
