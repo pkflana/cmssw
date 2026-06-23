@@ -64,6 +64,8 @@ options.register("use6BitGEMCSCBendingAngle", True, VarParsing.multiplicity.sing
                  "Set to True if you want to use 6 bit LUTs for the GEM-CSC bending angle in the CSCGEMMatcher.")
 options.register("useGEMAlignment", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True to apply GEM alignment corrections in the CSCGEMMatcher.")
+options.register("useEmulatorLCTs", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Set to True to use emulator LCTs directly; False to use data LCTs and then match to emulator LCTs.")
 options.parseArguments()
 
 process_era = Run3
@@ -405,6 +407,7 @@ process.GEMCSCTriggerTester = cms.EDAnalyzer('GEMCSCTriggerTester',
         luts_folder = cms.string("luts"),
         alignment = cms.bool(True),
         debug = cms.bool(False),
+        useEmulatorLCTs = cms.untracked.bool(options.useEmulatorLCTs),
 )
 # process.p7 = cms.EndPath(process.GEMCSCTriggerTester)
 

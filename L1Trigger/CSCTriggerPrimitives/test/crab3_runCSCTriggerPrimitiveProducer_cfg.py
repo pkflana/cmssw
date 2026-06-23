@@ -2,7 +2,7 @@ from CRABClient.UserUtilities import config
 config = config()
 
 #section general
-config.General.requestName = '2026-05-26'
+config.General.requestName = '2026-06-14'
 config.General.workArea = 'crab3_out'#working dir
 config.General.transferOutputs = True
 config.General.transferLogs = True
@@ -20,7 +20,7 @@ config.JobType.numCores = 1
 
 
 #section Data
-config.Data.inputDataset = '/Muon0/Run2026D-v1/RAW'#config.Data.inputDataset = '/Muon0/Run2024I-ZMu-PromptReco-v1/RAW-RECO'#'/Muon0/Run2024E-ZMu-PromptReco-v2/RAW-RECO'#'/Muon1/Run2023D-ZMu-PromptReco-v1/RAW-RECO'
+config.Data.inputDataset = '/Muon0/Run2026D-ZMu-PromptReco-v1/RAW-RECO'
 # config.Data.userInputFiles = open('Run2023D_Pv2.list').readlines()
 
 
@@ -31,7 +31,7 @@ config.Data.splitting = 'FileBased'
 #config.Data.splitting = 'LumiBased'
 # config.Data.splitting = 'Automatic'
 config.Data.unitsPerJob = 1
-config.Data.runRange = '403867'
+config.Data.runRange = '403937'
 # config.Data.totalUnits = 20
 # config.Data.outLFNDirBase = '/store/user/mkizilov/CSC_layer_geom/Run2023BC_IdealGeometry'
 config.Data.outLFNDirBase = '/store/user/pflanaga/crab3_out_2026/Trigger/' + config.General.requestName

@@ -26,7 +26,7 @@ options.register("dqm", False, VarParsing.multiplicity.singleton, VarParsing.var
                  "Set to True when you want to run the CSC DQM")
 options.register("dqmGEM", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to run the GEM DQM")
-options.register("useEmtfGEM", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("useEmtfGEM", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when you want to use GEM clusters from the EMTF in the DQM")
 options.register("useB904ME11", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when using B904 ME1/1 data.")
@@ -42,7 +42,7 @@ options.register('useB904GE11Short',False,VarParsing.multiplicity.singleton,VarP
                  "Set to True when using data from GE1/1 Short super chamber in B904.")
 options.register('useB904GE11Long',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
                  "Set to True when using data from GE1/1 Long super chamber in B904.")
-options.register("run3", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("run3", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when using Run-3 data.")
 options.register("runCCLUTOTMB", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True when using the CCLUT OTMB algorithm.")
@@ -56,13 +56,13 @@ options.register("saveEdmOutput", False, VarParsing.multiplicity.singleton, VarP
                  "Set to True if you want to keep the EDM ROOT after unpacking and re-emulating.")
 options.register("preTriggerAnalysis", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True if you want to print out more details about CLCTs and LCTs in the offline CSC DQM module.")
-options.register("dropNonMuonCollections", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("dropNonMuonCollections", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Option to drop most non-muon collections generally considered unnecessary for GEM/CSC analysis")
 options.register("dqmOutputFile", "step_DQM.root", VarParsing.multiplicity.singleton, VarParsing.varType.string,
                  "Name of the DQM output file. Default: step_DQM.root")
 options.register("use6BitGEMCSCBendingAngle", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True if you want to use 6 bit LUTs for the GEM-CSC bending angle in the CSCGEMMatcher.")
-options.register("useGEMAlignment", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("useGEMAlignment", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True to apply GEM alignment corrections in the CSCGEMMatcher.")
 options.parseArguments()
 
@@ -112,8 +112,8 @@ process.source = cms.Source(
 )
 
 ## this line is needed to run the GEM unpacker on output from AMC13SpyReadout.py or readFile_b904_Run3.py
-if options.unpackGEM:
-      process.source.labelRawDataLikeMC = cms.untracked.bool(False)
+# if options.unpackGEM:
+#       process.source.labelRawDataLikeMC = cms.untracked.bool(False)
 
 ## global tag (data or MC, Run-2 or Run-3)
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -124,7 +124,7 @@ if options.mc:
 else:
       process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
       if options.run3:
-            process.GlobalTag = GlobalTag(process.GlobalTag, '140X_dataRun3_v3', '')
+            process.GlobalTag = GlobalTag(process.GlobalTag, '150X_dataRun3_Prompt_v1', '')
 
 ## running on unpacked data, or after running the unpacker
 if not options.mc or options.unpack:
@@ -332,3 +332,11 @@ if options.saveEdmOutput:
       process.schedule.extend([process.p5])
 
 process.schedule.extend([process.p6])
+process.GEMCSCTriggerPrimitivesReader = cms.EDAnalyzer('GEMCSCTriggerPrimitivesReader', 
+      CSCLCTProducerData = cms.untracked.string("muonCSCDigis"),
+      CSCLCTProducerEmul = cms.untracked.string("cscTriggerPrimitiveDigis"),
+      debug = cms.bool(False),
+      )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("reader_output.root"))
+process.p7 = cms.EndPath(process.GEMCSCTriggerPrimitivesReader)
+process.schedule.extend([process.p7])
