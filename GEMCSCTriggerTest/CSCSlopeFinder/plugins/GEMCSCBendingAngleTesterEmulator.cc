@@ -295,7 +295,7 @@ TTree* LCTL1MuonMatcherEmulator::book(TTree *t, const char *name){
   t->Branch("LCT_all_GE1_pads_ES_align_corr", &LCT_all_GE1_pads_ES_aligned); t->Branch("LCT_all_GE2_pads_ES_align_corr", &LCT_all_GE2_pads_ES_aligned);
   t->Branch("LCT_match_GE1_WGMin", &LCT_match_GE1_WGMin); t->Branch("LCT_match_GE2_WGMin", &LCT_match_GE2_WGMin);
   t->Branch("LCT_match_GE1_WGMax", &LCT_match_GE1_WGMax); t->Branch("LCT_match_GE2_WGMax", &LCT_match_GE2_WGMax);
-  t->Branch("LCT_match_GE1_roll", &LCT_match_GE2_roll); t->Branch("LCT_match_GE2_roll", &LCT_match_GE2_roll);
+  t->Branch("LCT_match_GE1_roll", &LCT_match_GE1_roll); t->Branch("LCT_match_GE2_roll", &LCT_match_GE2_roll);
   t->Branch("LCT_all_GE1_pads_ES", &LCT_all_GE1_pads_ES); t->Branch("LCT_all_GE2_pads_ES", &LCT_all_GE2_pads_ES);
   t->Branch("LCT_all_GE1_bxs", &LCT_all_GE1_bxs); t->Branch("LCT_all_GE2_bxs", &LCT_all_GE2_bxs);
   t->Branch("LCT_all_GE1_WGMin", &LCT_all_GE1_WGMin); t->Branch("LCT_all_GE2_WGMin", &LCT_all_GE2_WGMin);

@@ -456,8 +456,7 @@ if not options.mc:
             gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
             muon_token = cms.InputTag("muons"),
             vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
-            #   luts_folder = cms.string("../luts"), #For local running
-            luts_folder = cms.string("luts"), #For crab running
+            luts_folder = cms.string(os.path.join(os.environ['CMSSW_BASE'], 'src/L1Trigger/CSCTriggerPrimitives/data')),
             alignment = cms.bool(True),
             debug = cms.bool(True),
       )
@@ -474,8 +473,7 @@ else:
             gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
             muon_token = cms.InputTag("muons"),#cms.InputTag("slimmedMuons"),
             vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
-            luts_folder = cms.string("../luts"), #For local running
-            #   luts_folder = cms.string("luts"), #For crab running
+            luts_folder = cms.string(os.path.join(os.environ['CMSSW_BASE'], 'src/L1Trigger/CSCTriggerPrimitives/data')),
             alignment = cms.bool(False),
             debug = cms.bool(False),
       )
