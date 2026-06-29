@@ -27,8 +27,6 @@ cmsRun GEMCSCTriggerTest/CSCSlopeFinder/test/run_unpack_CSCGEM_matcher.py mc=Tru
 ```
 This version can either match data LCTs to data reco muons and also match data LCTs to emulated LCTs, or it can match emulated LCTs directly to data reco muons. This is controlled with 
 the option "useEmulatorLCTs" where True means matching emulated directly to data. This allows you to test the difference made by making changes to how LCTs are emulated more directly.
-In the config, there is a commented block of text that uses simemtfdigis instead of emtfdigis, with the label that this is for MC. The simulation files I have have emtfdigis, so I 
-don't use this block, but if you run on some other MC it may be necessary.
 
 In both versions, you must make sure you have the correct global tag and set the correct option for mc/emulator. Most of the other options are fairly self-explanatory and I have barely had
 any cause to use them.

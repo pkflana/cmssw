@@ -445,39 +445,40 @@ process.CSCEmulatorReader = cms.EDAnalyzer('CSCEmulatorReader',
 #         debug = cms.bool(False),
 # )
 
-
-process.GEMCSCBendingAngleTester = cms.EDAnalyzer('GEMCSCBendingAngleTesterEmulator', 
-	process.MuonServiceProxy,
-        l1_muon_token = cms.InputTag("gmtStage2Digis", "Muon"),
-        emtf_muon_token = cms.InputTag("gmtStage2Digis", "EMTF"),
-        emtf_track_token = cms.InputTag("emtfStage2Digis", "", "L1CSCTPG"),
-        corrlctDigiTag = cms.InputTag("muonCSCDigis", "MuonCSCCorrelatedLCTDigi"),
-        lctEmuTag = cms.InputTag("cscTriggerPrimitiveDigis"),
-        gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
-        muon_token = cms.InputTag("muons"),
-        vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
-      #   luts_folder = cms.string("../luts"), #For local running
-        luts_folder = cms.string("luts"), #For crab running
-        alignment = cms.bool(True),
-        debug = cms.bool(True),
-)
+if not options.mc:
+      process.GEMCSCBendingAngleTester = cms.EDAnalyzer('GEMCSCBendingAngleTesterEmulator', 
+            process.MuonServiceProxy,
+            l1_muon_token = cms.InputTag("gmtStage2Digis", "Muon"),
+            emtf_muon_token = cms.InputTag("gmtStage2Digis", "EMTF"),
+            emtf_track_token = cms.InputTag("emtfStage2Digis", "", "L1CSCTPG"),
+            corrlctDigiTag = cms.InputTag("muonCSCDigis", "MuonCSCCorrelatedLCTDigi"),
+            lctEmuTag = cms.InputTag("cscTriggerPrimitiveDigis"),
+            gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
+            muon_token = cms.InputTag("muons"),
+            vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
+            #   luts_folder = cms.string("../luts"), #For local running
+            luts_folder = cms.string("luts"), #For crab running
+            alignment = cms.bool(True),
+            debug = cms.bool(True),
+      )
 
 # MC Version
-# process.GEMCSCBendingAngleTester = cms.EDAnalyzer('GEMCSCBendingAngleTesterEmulator', 
-# 	process.MuonServiceProxy,
-#         l1_muon_token = cms.InputTag("simGmtStage2Digis", ""),
-#         emtf_muon_token = cms.InputTag("simEmtfDigis", "EMTF"),
-#         emtf_track_token = cms.InputTag("simEmtfDigis", "", ""),
-#         corrlctDigiTag = cms.InputTag("muonCSCDigis", "MuonCSCCorrelatedLCTDigi"),
-#         lctEmuTag = cms.InputTag("cscTriggerPrimitiveDigis","", "L1CSCTPG"),
-#         gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
-#         muon_token = cms.InputTag("muons"),#cms.InputTag("slimmedMuons"),
-#         vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
-#         luts_folder = cms.string("../luts"), #For local running
-#       #   luts_folder = cms.string("luts"), #For crab running
-#         alignment = cms.bool(False),
-#         debug = cms.bool(False),
-# )
+else:
+      process.GEMCSCBendingAngleTester = cms.EDAnalyzer('GEMCSCBendingAngleTesterEmulator', 
+            process.MuonServiceProxy,
+            l1_muon_token = cms.InputTag("simGmtStage2Digis", ""),
+            emtf_muon_token = cms.InputTag("simEmtfDigis", "EMTF"),
+            emtf_track_token = cms.InputTag("simEmtfDigis", "", ""),
+            corrlctDigiTag = cms.InputTag("muonCSCDigis", "MuonCSCCorrelatedLCTDigi"),
+            lctEmuTag = cms.InputTag("cscTriggerPrimitiveDigis","", "L1CSCTPG"),
+            gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
+            muon_token = cms.InputTag("muons"),#cms.InputTag("slimmedMuons"),
+            vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
+            luts_folder = cms.string("../luts"), #For local running
+            #   luts_folder = cms.string("luts"), #For crab running
+            alignment = cms.bool(False),
+            debug = cms.bool(False),
+      )
 
 process.p9 = cms.EndPath(process.GEMCSCBendingAngleTester)
 

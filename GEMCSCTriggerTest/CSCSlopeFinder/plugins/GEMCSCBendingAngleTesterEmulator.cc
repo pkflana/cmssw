@@ -85,7 +85,7 @@ struct LCTL1MuonMatcherEmulator
   int LCT_eighthstrip;   int LCT_slope;
   int LCT_wiregroup;     int LCT_quality;
   int LCT_bend;          int LCT_BX;
-  int LCT_trknum;
+  int LCT_trknum;        uint16_t LCT_gemLayer;
   int CLCT_quality;
 
   //============ LCT Emu Info==============//
@@ -370,6 +370,7 @@ private:
   edm::Handle<View<reco::Muon> > muons;
   edm::EDGetTokenT<reco::VertexCollection> vertexCollection_token;
   edm::Handle<reco::VertexCollection> vertexCollection;
+  bool useEmulatorLCTs_;
 
 
 
@@ -516,6 +517,7 @@ GEMCSCBendingAngleTesterEmulator::GEMCSCBendingAngleTesterEmulator(const edm::Pa
   emtf_track_token = consumes<EMTFTrackCollection>(iConfig.getParameter<edm::InputTag>("emtf_track_token"));
   muon_token = consumes<View<reco::Muon> >(iConfig.getParameter<InputTag>("muon_token"));
   vertexCollection_token = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection_token"));
+  useEmulatorLCTs_ = iConfig.getUntrackedParameter<bool>("useEmulatorLCTs", false);
 
   luts_folder = iConfig.getParameter<string>("luts_folder");
 
@@ -667,40 +669,95 @@ GEMCSCBendingAngleTesterEmulator::analyze(const edm::Event& iEvent, const edm::E
     }
   }
 
-  for (CSCCorrelatedLCTDigiCollection::DigiRangeIterator j = correlatedlcts_emu->begin(); j != correlatedlcts_emu->end(); j++){
+  // Pick which collection to iterate over as the primary
+  const CSCCorrelatedLCTDigiCollection* primaryLCTs = useEmulatorLCTs_ ? correlatedlcts_emu.product() : correlatedlcts.product();
+  // (Adjust .product() depending on whether these are Handles or already pointers.)
+
+  for (CSCCorrelatedLCTDigiCollection::DigiRangeIterator j = primaryLCTs->begin(); j != primaryLCTs->end(); j++){
     CSCDetId LCTDetId = (*j).first;
     if (!(LCTDetId.station() == 1 and ((LCTDetId.ring() == 1) or (LCTDetId.ring() == 4)))) continue;
-    //data_.LCT_CSC_ME1a = LCTDetId.isME1a(); //These functions are broken! We must make our own
-    //data_.LCT_CSC_ME1b = LCTDetId.isME1b(); //Will do it at the LCT loop
     if (debug) cout << "Found a LCTDet to SegmentDet Match on Det " << LCTDetId << endl;
-    //Loop over LCTs
+
     std::vector<CSCCorrelatedLCTDigi>::const_iterator CSCCorrLCT = (*j).second.first;
-    std::vector<CSCCorrelatedLCTDigi>::const_iterator last = (*j).second.second;
+    std::vector<CSCCorrelatedLCTDigi>::const_iterator last       = (*j).second.second;
     for (; CSCCorrLCT != last; ++CSCCorrLCT){
       data_.init();
       dataOnlyRecos_.init();
-      data_.evtNum = iEvent.eventAuxiliary().event();
+      data_.evtNum    = iEvent.eventAuxiliary().event();
       data_.lumiBlock = iEvent.eventAuxiliary().luminosityBlock();
-      data_.runNum = iEvent.run();
-      
-      data_.LCT_CSC_endcap = LCTDetId.endcap();
+      data_.runNum    = iEvent.run();
+
+      data_.LCT_CSC_endcap  = LCTDetId.endcap();
       data_.LCT_CSC_station = LCTDetId.station();
-      data_.LCT_CSC_ring = LCTDetId.ring();
+      data_.LCT_CSC_ring    = LCTDetId.ring();
       data_.LCT_CSC_chamber = LCTDetId.chamber();
-      data_.has_LCT = true;
-      data_.LCT_emu_eighthstrip = (CSCCorrLCT->getStrip())*4 + (CSCCorrLCT->getQuartStripBit())*2 + (CSCCorrLCT->getEighthStripBit());
-      data_.LCT_emu_slope = CSCCorrLCT->getSlopeEx(6);
-      data_.LCT_wiregroup = CSCCorrLCT->getKeyWG();
-      data_.LCT_emu_quality = CSCCorrLCT->getQuality();
-      data_.LCT_emu_bend = CSCCorrLCT->getBend();
-      data_.LCT_emu_BX = CSCCorrLCT->getBX();
-      data_.LCT_emu_roll1 = CSCCorrLCT->getroll1();
-      data_.LCT_emu_roll2 = CSCCorrLCT->getroll2();
-      data_.LCT_CSC_ME1a = (data_.LCT_emu_eighthstrip > 512) ? 1 : 0;
-      data_.LCT_CSC_ME1b = (data_.LCT_emu_eighthstrip < 512) ? 1 : 0;
-      data_.LCT_trknum = CSCCorrLCT->getTrknmb();
-      data_.CLCT_quality = (CSCCorrLCT->getCLCT()).getQuality();
-      data_.LCT_emu_gemLayer = CSCCorrLCT->getGemLayerUsedForSlopeComputation();
+      data_.has_LCT         = true;
+
+      int eighthstrip = (CSCCorrLCT->getStrip())*4
+                      + (CSCCorrLCT->getQuartStripBit())*2
+                      + (CSCCorrLCT->getEighthStripBit());
+
+      data_.LCT_wiregroup  = CSCCorrLCT->getKeyWG();
+      data_.LCT_trknum     = CSCCorrLCT->getTrknmb();
+      data_.CLCT_quality   = (CSCCorrLCT->getCLCT()).getQuality();
+
+      if (useEmulatorLCTs_) {
+        //Emulator-only branch
+        data_.has_LCT_emu        = true;
+        data_.LCT_emu_eighthstrip = eighthstrip;
+        data_.LCT_emu_slope      = CSCCorrLCT->getSlopeEx(6);
+        data_.LCT_emu_quality    = CSCCorrLCT->getQuality();
+        data_.LCT_emu_bend       = CSCCorrLCT->getBend();
+        data_.LCT_emu_BX         = CSCCorrLCT->getBX();
+        data_.LCT_emu_roll1      = CSCCorrLCT->getroll1();
+        data_.LCT_emu_roll2      = CSCCorrLCT->getroll2();
+        data_.LCT_emu_gemLayer   = CSCCorrLCT->getGemLayerUsedForSlopeComputation();
+
+        data_.LCT_CSC_ME1a = (eighthstrip > 512) ? 1 : 0;
+        data_.LCT_CSC_ME1b = (eighthstrip < 512) ? 1 : 0;
+      } else {
+        //Data branch (original behavior)
+        data_.LCT_eighthstrip = eighthstrip;
+        data_.LCT_slope       = CSCCorrLCT->getSlopeEx(6);
+        data_.LCT_quality     = CSCCorrLCT->getQuality();
+        data_.LCT_bend        = CSCCorrLCT->getBend();
+        data_.LCT_BX          = CSCCorrLCT->getBX();
+        data_.LCT_gemLayer   = CSCCorrLCT->getGemLayerUsedForSlopeComputation();
+
+        data_.LCT_CSC_ME1a = (eighthstrip > 512) ? 1 : 0;
+        data_.LCT_CSC_ME1b = (eighthstrip < 512) ? 1 : 0;
+
+        // Match data LCT to emulator LCT
+        for (CSCCorrelatedLCTDigiCollection::DigiRangeIterator k = correlatedlcts_emu->begin(); k != correlatedlcts_emu->end(); k++){
+          CSCDetId LCTEmuDetId = (*k).first;
+          if (!(LCTEmuDetId.station() == 1 and ((LCTEmuDetId.ring() == 1) or (LCTEmuDetId.ring() == 4)))) continue;
+          if (debug) cout << "Found a LCTEmuDet to SegmentDet Match on Det " << LCTEmuDetId << endl;
+
+          if (!(data_.LCT_CSC_endcap  == LCTEmuDetId.endcap()  and
+                data_.LCT_CSC_station == LCTEmuDetId.station() and
+                data_.LCT_CSC_ring    == LCTEmuDetId.ring()    and
+                data_.LCT_CSC_chamber == LCTEmuDetId.chamber())) continue;
+
+          std::vector<CSCCorrelatedLCTDigi>::const_iterator CSCCorrLCTEmu = (*k).second.first;
+          std::vector<CSCCorrelatedLCTDigi>::const_iterator last_emu      = (*k).second.second;
+          for (; CSCCorrLCTEmu != last_emu; ++CSCCorrLCTEmu){
+            if (debug) cout << "Found a LCTEmu" << endl;
+            data_.has_LCT_emu        = true;
+            data_.LCT_emu_slope      = CSCCorrLCTEmu->getSlopeEx(6);
+            data_.LCT_emu_bend       = CSCCorrLCTEmu->getBend();
+            data_.LCT_emu_quality    = CSCCorrLCTEmu->getQuality();
+            data_.LCT_emu_BX         = CSCCorrLCTEmu->getBX();
+            data_.LCT_emu_eighthstrip = (CSCCorrLCTEmu->getStrip())*4
+                                      + (CSCCorrLCTEmu->getQuartStripBit())*2
+                                      + (CSCCorrLCTEmu->getEighthStripBit());
+            data_.LCT_emu_gemLayer   = CSCCorrLCTEmu->getGemLayerUsedForSlopeComputation();
+            data_.LCT_emu_roll1      = CSCCorrLCTEmu->getroll1();
+            data_.LCT_emu_roll2      = CSCCorrLCTEmu->getroll2();
+            if (debug) cout << "Found a match on BX " << data_.LCT_BX << endl;
+          }
+        }
+      }
+
       if (debug){
         std::cout << "Dump the ME1/1 LCT" << std::endl;
         std::cout << "Quality " << CSCCorrLCT->getQuality() << std::endl;
@@ -708,30 +765,6 @@ GEMCSCBendingAngleTesterEmulator::analyze(const edm::Event& iEvent, const edm::E
         std::cout << "Bend " << CSCCorrLCT->getBend() << std::endl;
         std::cout << "Slope " << CSCCorrLCT->getSlope() << std::endl;
       }
-
-      // //Match LCT to Emulator LCT
-      // for (CSCCorrelatedLCTDigiCollection::DigiRangeIterator k = correlatedlcts_emu->begin(); k != correlatedlcts_emu->end(); k++){
-      //   CSCDetId LCTEmuDetId = (*k).first;
-      //   if (!(LCTEmuDetId.station() == 1 and ((LCTEmuDetId.ring() == 1) or (LCTEmuDetId.ring() == 4)))) continue;
-      //   if (debug) cout << "Found a LCTEmuDet to SegmentDet Match on Det " << LCTEmuDetId << endl;
-      //   //Loop over Emulator LCTs
-      //   std::vector<CSCCorrelatedLCTDigi>::const_iterator CSCCorrLCTEmu = (*k).second.first;
-      //   std::vector<CSCCorrelatedLCTDigi>::const_iterator last_emu = (*k).second.second;
-      //   for (; CSCCorrLCTEmu != last_emu; ++CSCCorrLCTEmu){
-      //     if (debug) cout << "Found a LCTEmu" << endl;
-      //     if ((data_.LCT_CSC_endcap == LCTEmuDetId.endcap()) and (data_.LCT_CSC_station == LCTEmuDetId.station()) and (data_.LCT_CSC_ring == LCTEmuDetId.ring()) and (data_.LCT_CSC_chamber == LCTEmuDetId.chamber())){
-      //       data_.has_LCT_emu = true;
-      //       data_.LCT_emu_slope = CSCCorrLCTEmu->getSlope();
-      //       data_.LCT_emu_bend = CSCCorrLCTEmu->getBend();
-      //       data_.LCT_emu_quality = CSCCorrLCTEmu->getQuality();
-      //       data_.LCT_emu_BX = CSCCorrLCTEmu->getBX();
-      //       data_.LCT_emu_eighthstrip = (CSCCorrLCTEmu->getStrip())*4 + (CSCCorrLCTEmu->getQuartStripBit())*2 + (CSCCorrLCTEmu->getEighthStripBit());
-      //       data_.LCT_emu_gemLayer = CSCCorrLCTEmu->getGemLayerUsedForSlopeComputation();
-      //       std::cout<<"As fresh as it gets, gemlayer: "<<CSCCorrLCTEmu->getGemLayerUsedForSlopeComputation()<<std::endl;
-      //       if (debug) cout << "Found a match on BX " << data_.LCT_BX << endl;
-      //     }
-      //   }
-      // }
 
       //Find LCT Propagation
       map<int, int> CSCLCTPropL1Map;
