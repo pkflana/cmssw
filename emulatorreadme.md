@@ -14,14 +14,14 @@ Currently, I have Konstantin's 0 placeholders in the folder AlignmentCorrection_
 the desired folder to AlignmentCorrection. Any other corrections you make/want to test need to be put into a folder with that name.
 
 There's currently two versions of running the emulator, running the "bare" emulator, which here means the emulator in the official cmssw + the reader + the emulated LCT reports GEM hit roll
-information. This requires the file you run over to have the RAW datatier. An example command (assuming you're running from src) is:\
+information. This requires the file you run over to have the RAW datatier. An example command (assuming you're running from src) is:
 ```
 cmsRun L1Trigger/CSCTriggerPrimitives/test/runCSCTriggerPrimitiveProducer_cfg.py mc=True inputFiles="file:/eos/user/p/pflanaga/singlemu2_50_eta_restricted/1/step3_1.root"
 ```
 For the output of this, slopeex is the new 6-bit slope
 
 The second version is running the version of the emulator that matches LCTs to emtftracks and then to reco muons, helping to single out high quality muons. This version requires both the RAW
-and RECO datatiers. An example command is:\
+and RECO datatiers. An example command is:
 ```
 cmsRun GEMCSCTriggerTest/CSCSlopeFinder/test/run_unpack_CSCGEM_matcher.py mc=True inputFiles="file:/eos/user/p/pflanaga/singlemu2_50_eta_restricted/1/step3_1.root"
 ```

@@ -4,6 +4,7 @@ from Configuration.Eras.Era_Run3_cff import Run3
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
 from CalibMuon.CSCCalibration.CSCCustomizeBendingAngle_cfi import set_6bit_gemcsc_bending_LUTs
 from CalibMuon.CSCCalibration.CSCCustomizeGEMAlignment_cfi import set_gem_alignment_corrections
+import os
 
 options = VarParsing('analysis')
 options.register("unpack", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
@@ -64,7 +65,7 @@ options.register("use6BitGEMCSCBendingAngle", True, VarParsing.multiplicity.sing
                  "Set to True if you want to use 6 bit LUTs for the GEM-CSC bending angle in the CSCGEMMatcher.")
 options.register("useGEMAlignment", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True to apply GEM alignment corrections in the CSCGEMMatcher.")
-options.register("useEmulatorLCTs", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("useEmulatorLCTs", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True to use emulator LCTs directly; False to use data LCTs and then match to emulator LCTs.")
 options.parseArguments()
 
