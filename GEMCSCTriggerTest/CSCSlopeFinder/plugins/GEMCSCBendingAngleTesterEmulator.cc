@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "FWCore/ParameterSet/interface/FileInPath.h"
 #include <filesystem>
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
@@ -519,7 +520,10 @@ GEMCSCBendingAngleTesterEmulator::GEMCSCBendingAngleTesterEmulator(const edm::Pa
   vertexCollection_token = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection_token"));
   useEmulatorLCTs_ = iConfig.getUntrackedParameter<bool>("useEmulatorLCTs", false);
 
-  luts_folder = iConfig.getParameter<string>("luts_folder");
+  std::string luts_rel = iConfig.getParameter<std::string>("luts_folder");
+  edm::FileInPath sentinel(luts_rel + "/GEMCSC/CoordinateConversion/GEMCSCLUT_pad_es_ME1a_even.txt");
+  std::filesystem::path sp(sentinel.fullPath());
+  luts_folder = sp.parent_path().parent_path().parent_path().string();
 
   use_alignment = iConfig.getParameter<bool>("alignment");
   debug = iConfig.getParameter<bool>("debug");

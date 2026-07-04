@@ -65,7 +65,7 @@ options.register("use6BitGEMCSCBendingAngle", True, VarParsing.multiplicity.sing
                  "Set to True if you want to use 6 bit LUTs for the GEM-CSC bending angle in the CSCGEMMatcher.")
 options.register("useGEMAlignment", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True to apply GEM alignment corrections in the CSCGEMMatcher.")
-options.register("useEmulatorLCTs", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+options.register("useEmulatorLCTs", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Set to True to use emulator LCTs directly; False to use data LCTs and then match to emulator LCTs.")
 options.parseArguments()
 
@@ -402,6 +402,8 @@ process.options = cms.untracked.PSet(
 #process.TFileService = cms.Service("TFileService", fileName = cms.string(outfile)) #variable name set above
 process.TFileService = cms.Service("TFileService", fileName = cms.string(options.outputFile))
 
+luts_folder = "L1Trigger/CSCTriggerPrimitives/data"
+
 process.GEMCSCTriggerTester = cms.EDAnalyzer('GEMCSCTriggerTester',
 	process.MuonServiceProxy,
 	gemRecHits = cms.InputTag("gemRecHits"),
@@ -409,7 +411,7 @@ process.GEMCSCTriggerTester = cms.EDAnalyzer('GEMCSCTriggerTester',
         corrlctDigiTag = cms.InputTag("muonCSCDigis", "MuonCSCCorrelatedLCTDigi"),
         gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
 	vertexCollection = cms.InputTag("offlinePrimaryVertices"),
-        luts_folder = cms.string("luts"),
+        luts_folder = cms.string(luts_folder),
         alignment = cms.bool(True),
         debug = cms.bool(False),
         useEmulatorLCTs = cms.untracked.bool(options.useEmulatorLCTs),
@@ -457,7 +459,7 @@ if not options.mc:
             gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
             muon_token = cms.InputTag("muons"),
             vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
-            luts_folder = cms.string(os.path.join(os.environ['CMSSW_BASE'], 'src/L1Trigger/CSCTriggerPrimitives/data')),
+            luts_folder = cms.string(luts_folder),
             alignment = cms.bool(True),
             debug = cms.bool(True),
       )
@@ -474,8 +476,8 @@ else:
             gemPadDigiCluster = cms.InputTag("muonCSCDigis", "MuonGEMPadDigiCluster"),
             muon_token = cms.InputTag("muons"),#cms.InputTag("slimmedMuons"),
             vertexCollection_token = cms.InputTag("offlinePrimaryVertices"),
-            luts_folder = cms.string(os.path.join(os.environ['CMSSW_BASE'], 'src/L1Trigger/CSCTriggerPrimitives/data')),
-            alignment = cms.bool(False),
+            luts_folder = cms.string(luts_folder),
+            alignment = cms.bool(True),
             debug = cms.bool(False),
       )
 
@@ -483,7 +485,3 @@ process.p9 = cms.EndPath(process.GEMCSCBendingAngleTester)
 
 process.schedule.extend([process.p9])
 print(process.schedule)
-
-#print(process.dumpPython())
-#cmsRun /eos/user/p/pflanaga/cmssw_old/CMSSW_15_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/run_unpack_CSCGEM_matcher.py maxEvents=-1 inputFiles="file:root://cms-xrd-global.cern.ch//store/mc/Run3Winter25Digi/Nu_Par-E-10_PGun/GEN-SIM-RAW/SNB_142X_mcRun3_2025_realistic_v7-v2/2560000/002f0559-d9c7-4f18-9977-7845e9822711.root"
-#cmsRun /eos/user/p/pflanaga/cmssw_old/CMSSW_15_1_0/src/GEMCSCTriggerTest/CSCSlopeFinder/test/run_unpack_CSCGEM_matcher.py maxEvents=-1 inputFiles="file:root://cms-xrd-global.cern.ch//store/mc/Run3Winter25Digi/Nu_Bin-Pt-2to20_PGun/GEN-SIM-RAW/SNB_142X_mcRun3_2025_realistic_v7-v3/140000/0b700917-6ba5-4a96-adc5-0b4bf33b79b4.root"
