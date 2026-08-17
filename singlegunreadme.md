@@ -1,4 +1,4 @@
-The scripts I used to create the muon gun samples are included. I ran this in CMSSW_15_1_0, you'll have to edit all eos paths in both files. I two arguments in the bash file are folder number\
+The scripts I used to create the muon gun samples are included. I ran this in CMSSW_15_1_0, you'll have to edit all eos paths in both files. The two arguments in the bash file are folder number\
 (for parallelization) and config used. The configs are located in Configuration/Generator/python, you can edit configs there or make new ones
 
 ```
@@ -78,5 +78,58 @@ print(before,after)
 submit_result = schedd.submit(job,itemdata = iter(arguments))
 ```
 
-I have not yet looked into saving less to save space, I will do this later and update.
+In order to skim the files to only keep certain collections, you can use the following:
+```
+import FWCore.ParameterSet.Config as cms
+
+def customize(process):
+    out = None
+    for name in ("FEVTDEBUGHLToutput", "FEVTDEBUGoutput", "RECOSIMoutput"):
+        if hasattr(process, name):
+            out = getattr(process, name)
+            break
+    if out is None:
+        raise RuntimeError("Could not find the RECO output module to slim.")
+
+    out.outputCommands = cms.untracked.vstring(
+        "drop *",
+
+        #raw data
+        "keep FEDRawDataCollection_rawDataCollector_*_*",
+
+        #muons and such
+        "keep recoMuons_muons_*_*",
+        "keep recoVertexs_offlinePrimaryVertices_*_*",
+        "keep *_cscSegments_*_*",
+        "keep *_gemRecHits_*_*",
+        "keep *_dt4DSegments_*_*",
+        "keep *_rpcRecHits_*_*",
+
+        #L1 Digis
+        "keep *_simGmtStage2Digis_*_*",
+        "keep *_simEmtfDigis_*_*",
+
+        #tracks
+        "keep recoTracks_generalTracks_*_*",
+        "keep recoTrackExtras_generalTracks_*_*",
+        "keep TrackingRecHitsOwned_generalTracks_*_*",
+        "keep recoTracks_globalMuons_*_*",
+        "keep recoTracks_standAloneMuons_*_*",
+
+        #simDigis
+        "keep *_simMuonGEMDigis_*_*",
+    )
+    return process
+```
+
+You need to save this somewhere and then pass it as a customise function to your step3 command, for example \
+you can save it as skim.py in Configuration/Generator/python, and add the line:
+```
+--customise Configuration/Generator/skim.customize
+```
+
+to step3. Note, this skim leaves everything you need to run either emulator version on the output. If you're running some \
+other application, check to see if you need anything not kept here.
+
+
 
