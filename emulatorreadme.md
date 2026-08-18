@@ -4,7 +4,7 @@ Install:
 cmsrel CMSSW_16_1_0
 cd CMSSW_16_1_0/src
 cmsenv
-git cms-merge-topic pkflana:new_data_format
+git cms-merge-topic tamu-cms:new_data_format
 scram b -j8
 ```
 
